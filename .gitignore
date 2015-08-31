@@ -5,4 +5,7 @@ pom.xml.versionsBackup
 pom.xml.next
 release.properties
 dependency-reduced-pom.xml
-buildNumber.properties
+buildNumber.propertie
+.idea/
+.ph
+out/

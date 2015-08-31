@@ -1,0 +1,4 @@
+Manifest-Version: 1.0
+Class-Path: flipkart.cp.convert.scheduler.worker.container
+Main-Class: flipkart.cp.convert.ha.worker.Bootstrap
+

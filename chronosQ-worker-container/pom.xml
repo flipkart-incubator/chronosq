@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>chronosQ</artifactId>
+        <groupId>chronosQ</groupId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>chronosQ-worker-container</artifactId>
+    <dependencies>
+
+        <dependency>
+            <groupId>chronosQ</groupId>
+            <artifactId>ha-worker</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+
+        <dependency>
+            <groupId>chronosQ</groupId>
+            <artifactId>chronosQ-reservation-impl-redis</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>chronosQ</groupId>
+            <artifactId>chronosQ-reservation-impl-rmq</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>com.flipkart.configservice</groupId>
+            <artifactId>cfgsvc-client-java</artifactId>
+            <version>0.3.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.flipkart.cp.convert.simple.proxy</groupId>
+            <artifactId>simple-proxy</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.commons</groupId>
+                    <artifactId>commons-pool2</artifactId>
+                </exclusion>
+            </exclusions>
+            <version>2.2.6-SNAPSHOT</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.netflix.hystrix.customized</groupId>
+            <artifactId>hystrix-core</artifactId>
+            <version>1.2-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>com.flipkart.cp</groupId>
+            <artifactId>config-service-client-wrapper</artifactId>
+            <version>2.3.5</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>4.3.3</version>
+       </dependency>
+
+
+    </dependencies>
+
+
+</project>
