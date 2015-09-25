@@ -87,7 +87,10 @@ public class WorkerTaskImpl extends WorkerTask {
                 // Sleeping if currently got processed
                 log.info("sleep for " + (nextIntervalForProcess - currentDateTimeInMilliSec));
                 Thread.sleep(nextIntervalForProcess - currentDateTimeInMilliSec);
-            } catch (Exception ex) {
+            } catch (InterruptedException e){
+                log.error("Thread interrupted. Breaking and Restarting. ", e);
+                break;
+            }catch (Exception ex) {
                 log.error("Exception in processing WorkerTaskImpl. Restarting ", ex);
             }
         }
