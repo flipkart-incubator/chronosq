@@ -16,6 +16,7 @@ import java.util.Set;
 
 public class RedisSchedulerStore implements SchedulerStore {
     private final RedisParitioner redisParitioner;
+    private static final String DELIMITER = "-";
     static Logger log = LoggerFactory.getLogger(RedisSchedulerStore.class.getName());
 
     public RedisSchedulerStore(RedisParitioner redisParitioner) {
@@ -45,12 +46,14 @@ public class RedisSchedulerStore implements SchedulerStore {
     @Override
     public void add(String value, long time, int partitionNum) throws SchedulerException {
         Jedis jedis = null;
+        String key = "";
         try {
             jedis = _getInstance(partitionNum);
-            jedis.sadd(convertLongToString(time), value);
-            log.info("Added value " + value + "To " + time);
+            key = getKey(time, partitionNum);
+            jedis.sadd(key, value);
+            log.info("Added value " + value + "To " + key);
         } catch (Exception ex) {
-            log.error("Exception occurred  for -" + value + "Key" + time + "Partition " + partitionNum + "-" + ex.getMessage());
+            log.error("Exception occurred  for -" + value + "Key" + key + "Partition " + partitionNum + "-" + ex.getMessage());
             throw new SchedulerException(ex, ErrorCode.DATASTORE_READWRITE_ERROR);
         } finally {
             if ((jedis != null))
@@ -62,13 +65,17 @@ public class RedisSchedulerStore implements SchedulerStore {
     public Long update(String value, long oldTime, long newTime, int partitionNum) throws SchedulerException {
         Jedis jedis = null;
         Long result;
+        String oldKey = "";
+        String newKey = "";
         try {
             jedis = _getInstance(partitionNum);
-            result = jedis.smove(convertLongToString(oldTime), convertLongToString(newTime), value);
-            log.info("Updated value " + value + "From " + oldTime + "To " + newTime);
+            oldKey = getKey(oldTime, partitionNum);
+            newKey = getKey(newTime, partitionNum);
+            result = jedis.smove(oldKey, newKey, value);
+            log.info("Updated value " + value + "From " + oldKey + "To " + newKey);
             return result;
         } catch (Exception ex) {
-            log.error("Exception occurred  for -" + value + "Key" + oldTime + "Partition " + partitionNum + "-" + ex.getMessage());
+            log.error("Exception occurred  for -" + value + "Key" + oldKey + "Partition " + partitionNum + "-" + ex.getMessage());
             throw new SchedulerException(ex, ErrorCode.DATASTORE_READWRITE_ERROR);
         } finally {
             if ((jedis != null))
@@ -80,14 +87,16 @@ public class RedisSchedulerStore implements SchedulerStore {
     @Override
     public Long remove(String value, long time, int partitionNum) throws SchedulerException {
         Jedis jedis = null;
+        String key = "";
 
         try {
             jedis = _getInstance(partitionNum);
-            Long result = jedis.srem(convertLongToString(time), value);
-            log.info("Removed value " + value + "From" + time);
+            key = getKey(time, partitionNum);
+            Long result = jedis.srem(key, value);
+            log.info("Removed value " + value + "From" + key);
             return result;
         } catch (Exception ex) {
-            log.error("Exception occurred  for -" + value + "Key" + time + "Partition " + partitionNum + "-" + ex.getMessage());
+            log.error("Exception occurred  for -" + value + "Key" + key + "Partition " + partitionNum + "-" + ex.getMessage());
             throw new SchedulerException(ex, ErrorCode.DATASTORE_READWRITE_ERROR);
         } finally {
             if ((jedis != null))
@@ -99,12 +108,14 @@ public class RedisSchedulerStore implements SchedulerStore {
     public List<String> get(long time, int partitionNum) throws SchedulerException {
         Jedis jedis = null;
         Set<String> resultSet;
+        String key = "";
         try {
             jedis = _getInstance(partitionNum);
-            resultSet = jedis.smembers(convertLongToString(time));
-            log.info("Get For " + time + "-" + resultSet);
+            key = getKey(time, partitionNum);
+            resultSet = jedis.smembers(key);
+            log.info("Get For " + key + "-" + resultSet);
         } catch (Exception ex) {
-            log.error("Exception occurred  for -" + "Key" + time + "Partition " + partitionNum + "-" + ex.getMessage());
+            log.error("Exception occurred  for -" + "Key" + key + "Partition " + partitionNum + "-" + ex.getMessage());
             throw new SchedulerException(ex, ErrorCode.DATASTORE_READWRITE_ERROR);
         } finally {
             if ((jedis != null))
@@ -113,16 +124,19 @@ public class RedisSchedulerStore implements SchedulerStore {
         return new ArrayList<String>(resultSet);
     }
 
+
     @Override
     public List<String> getNextN(long time, int partitionNum, int n) throws SchedulerException {
         Jedis jedis = null;
         List<String> resultSet;
+        String key = "";
         try {
             jedis = _getInstance(partitionNum);
-            resultSet = jedis.srandmember(convertLongToString(time), n);
-            log.info("Get For " + time + "-" + resultSet);
+            key = getKey(time, partitionNum);
+            resultSet = jedis.srandmember(key, n);
+            log.info("Get For " + key + "-" + resultSet);
         } catch (Exception ex) {
-            log.error("Exception occurred  for -" + "Key" + time + "Partition " + partitionNum + "-" + ex.getMessage());
+            log.error("Exception occurred  for -" + "Key" + key + "Partition " + partitionNum + "-" + ex.getMessage());
             throw new SchedulerException(ex, ErrorCode.DATASTORE_READWRITE_ERROR);
         } finally {
             if ((jedis != null))
@@ -134,14 +148,16 @@ public class RedisSchedulerStore implements SchedulerStore {
     @Override
     public void removeBulk(long time, int partitionNum, List<String> values) throws SchedulerException {
         Jedis jedis = null;
+        String key = "";
         try {
             jedis = _getInstance(partitionNum);
             Pipeline pipeline = jedis.pipelined();
+            key = getKey(time, partitionNum);
             for (String value : values)
-                pipeline.srem(convertLongToString(time), value);
-            log.info("Removed values " + values + "From" + time);
+                pipeline.srem(key, value);
+            log.info("Removed values " + values + "From" + key);
         } catch (Exception ex) {
-            log.error("Exception occurred  for -" + values + "Key" + time + "Partition " + partitionNum + "-" + ex.getMessage());
+            log.error("Exception occurred  for -" + values + "Key" + key + "Partition " + partitionNum + "-" + ex.getMessage());
             throw new SchedulerException(ex, ErrorCode.DATASTORE_READWRITE_ERROR);
         } finally {
             if ((jedis != null))
@@ -149,7 +165,12 @@ public class RedisSchedulerStore implements SchedulerStore {
         }
     }
 
-    private static String convertLongToString(long time) {
+
+    private static String getKey(long time, int partitionNum) {
+        return convertNumToString(time) + DELIMITER + convertNumToString(partitionNum);
+    }
+
+    private static String convertNumToString(long time) {
         return String.valueOf(time);
     }
 
