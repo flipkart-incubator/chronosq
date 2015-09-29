@@ -9,4 +9,4 @@ buildNumber.propertie
 .idea/
 .ph
 out/
-*.iml
+.iml
