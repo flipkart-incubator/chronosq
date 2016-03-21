@@ -6,7 +6,7 @@
 
     <groupId>chronosQ</groupId>
     <artifactId>chronosQ</artifactId>
-    <version>1.5</version>
+    <version>1.5-SNAPSHOT</version>
 
     <packaging>pom</packaging>
     <modules>

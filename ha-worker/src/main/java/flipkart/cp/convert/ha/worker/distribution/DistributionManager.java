@@ -2,9 +2,11 @@ package flipkart.cp.convert.ha.worker.distribution;
 
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.MetricRegistry;
+import com.google.common.base.Optional;
 import flipkart.cp.convert.ha.worker.exception.ErrorCode;
 import flipkart.cp.convert.ha.worker.exception.WorkerException;
 import flipkart.cp.convert.ha.worker.task.TaskList;
+import flipkart.cp.convert.ha.worker.task.TaskShutDownHook;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.cache.TreeCache;
 import org.apache.curator.framework.recipes.cache.TreeCacheEvent;
@@ -36,6 +38,7 @@ public class DistributionManager implements Closeable, TreeCacheListener {
     private List<String> workerInstances;
     private Restartable restartable;
     private MetricRegistry metricRegistry;
+    private Optional<TaskShutDownHook> taskShutDownHook;
     private static Logger log = LoggerFactory.getLogger(DistributionManager.class.getName());
 
     public DistributionManager(CuratorFramework client, TaskList taskList, String appName, String instanceId, MetricRegistry metricRegistry) throws WorkerException {
@@ -62,6 +65,11 @@ public class DistributionManager implements Closeable, TreeCacheListener {
                         return workerInstances.size();
                     }
                 });
+    }
+
+    public DistributionManager(CuratorFramework client, TaskList taskList, String appName, String instanceId, MetricRegistry metricRegistry, TaskShutDownHook shutDownHook) throws WorkerException {
+        this(client,taskList,appName,instanceId,metricRegistry);
+        this.taskShutDownHook = Optional.of(shutDownHook);
     }
 
     private void _attachListener() throws WorkerException {
@@ -115,6 +123,8 @@ public class DistributionManager implements Closeable, TreeCacheListener {
     public void setRestartable(Restartable restartable) {
         this.restartable = restartable;
     }
+
+    public Optional<TaskShutDownHook> getTaskShutDownHook() { return taskShutDownHook; }
 
     @Override
     public void childEvent(CuratorFramework curatorFramework, TreeCacheEvent treeCacheEvent) throws Exception {

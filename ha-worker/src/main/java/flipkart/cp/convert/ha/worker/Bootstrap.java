@@ -8,6 +8,8 @@ import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import com.google.inject.*;
+import flipkart.cp.convert.ha.worker.task.TaskShutDownHook;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.GnuParser;
@@ -21,9 +23,6 @@ import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.MetricRegistry;
 import com.google.common.base.Function;
-import com.google.inject.AbstractModule;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 
 import flipkart.cp.convert.ha.worker.di.WorkerModule;
 import flipkart.cp.convert.ha.worker.distribution.DistributionManager;
@@ -122,9 +121,10 @@ public class Bootstrap {
         WorkerTaskFactory taskFactory = injector.getInstance(WorkerTaskFactory.class);
         TaskList taskList = injector.getInstance(TaskList.class);
         MetricRegistry metricRegistry = injector.getInstance(MetricRegistry.class);
+        TaskShutDownHook shutDownHook = injector.getInstance(TaskShutDownHook.class);
         try {
             DistributionManager distributionManager =
-                    new DistributionManager(client, taskList, appName, instanceId, metricRegistry);
+                    new DistributionManager(client, taskList, appName, instanceId, metricRegistry, shutDownHook);
             WorkerManager workerManager = new WorkerManager(taskFactory, distributionManager);
             workerManager.start();
             return workerManager;
@@ -148,7 +148,11 @@ public class Bootstrap {
 
         public void run() {
             for (WorkerManager workerManager : workerManagerList) {
-                workerManager.stop();
+                try {
+                    workerManager.stop();
+                } catch (WorkerException ex) {
+                    log.error("Exception occured " + ex.fillInStackTrace());
+                }
             }
         }
     }

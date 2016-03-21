@@ -31,6 +31,7 @@ public class WorkerTaskImpl extends WorkerTask {
     private final String metricGaugeName;
     private final Timer sinkPushingTime;
     private final int batchSize;
+    private boolean interrupt = false;
     static Logger log = LoggerFactory.getLogger(WorkerTaskImpl.class.getName());
 
     public WorkerTaskImpl(SchedulerCheckpointer checkpointer, SchedulerStore schedulerStore, TimeBucket timeBucket, SchedulerSink schedulerSink, String taskName, MetricRegistry metricRegistry, int batchSize) {
@@ -65,19 +66,19 @@ public class WorkerTaskImpl extends WorkerTask {
 
     @Override
     public void process() {
-        while (!Thread.currentThread().isInterrupted()) {
+        while (!interrupt && !Thread.currentThread().isInterrupted()) {
             try {
                 long currentDateTimeInMilliSec = getCurrentDateTimeInMilliSecs();
                 long nextIntervalForProcess = calculateNextIntervalForProcess(getPartitionNum());
-                while (nextIntervalForProcess <= currentDateTimeInMilliSec) {
+                while (!interrupt && nextIntervalForProcess <= currentDateTimeInMilliSec) {
                     List<String> values = schedulerStore.getNextN(nextIntervalForProcess, getPartitionNum(), batchSize);
 
-                    while (!values.isEmpty()) {
-                        values = schedulerStore.getNextN(nextIntervalForProcess, getPartitionNum(), batchSize);
+                    while (!interrupt && !values.isEmpty()) {
                         final Timer.Context context = sinkPushingTime.time();
                         schedulerSink.giveExpiredListForProcessing(values);
                         context.stop();
                         schedulerStore.removeBulk(nextIntervalForProcess, getPartitionNum(), values);
+                        values = schedulerStore.getNextN(nextIntervalForProcess, getPartitionNum(), batchSize);
                     }
                     checkpointer.set(String.valueOf(nextIntervalForProcess), getPartitionNum());
                     log.info("Processed for " + nextIntervalForProcess + " in partition " + getPartitionNum());
@@ -97,6 +98,9 @@ public class WorkerTaskImpl extends WorkerTask {
 
     }
 
+    public void interrupt() {
+        this.interrupt = true;
+    }
 
     private long calculateNextIntervalForProcess(int partitionNum) throws SchedulerException {
 
