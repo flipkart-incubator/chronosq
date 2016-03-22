@@ -41,7 +41,7 @@ public class DistributionManager implements Closeable, TreeCacheListener {
     private Optional<TaskShutDownHook> taskShutDownHook;
     private static Logger log = LoggerFactory.getLogger(DistributionManager.class.getName());
 
-    public DistributionManager(CuratorFramework client, TaskList taskList, String appName, String instanceId, MetricRegistry metricRegistry) throws WorkerException {
+    public DistributionManager(CuratorFramework client, TaskList taskList, String appName, String instanceId, MetricRegistry metricRegistry, Optional<TaskShutDownHook> shutDownHook) throws WorkerException {
         this.taskList = taskList;
         this.client = client;
         this.appName = appName;
@@ -65,11 +65,7 @@ public class DistributionManager implements Closeable, TreeCacheListener {
                         return workerInstances.size();
                     }
                 });
-    }
-
-    public DistributionManager(CuratorFramework client, TaskList taskList, String appName, String instanceId, MetricRegistry metricRegistry, TaskShutDownHook shutDownHook) throws WorkerException {
-        this(client,taskList,appName,instanceId,metricRegistry);
-        this.taskShutDownHook = Optional.of(shutDownHook);
+        this.taskShutDownHook = shutDownHook;
     }
 
     private void _attachListener() throws WorkerException {

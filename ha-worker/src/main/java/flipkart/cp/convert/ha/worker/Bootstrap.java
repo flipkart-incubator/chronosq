@@ -8,6 +8,7 @@ import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import com.google.common.base.Optional;
 import com.google.inject.*;
 import flipkart.cp.convert.ha.worker.task.TaskShutDownHook;
 import org.apache.commons.cli.CommandLine;
@@ -121,10 +122,17 @@ public class Bootstrap {
         WorkerTaskFactory taskFactory = injector.getInstance(WorkerTaskFactory.class);
         TaskList taskList = injector.getInstance(TaskList.class);
         MetricRegistry metricRegistry = injector.getInstance(MetricRegistry.class);
-        TaskShutDownHook shutDownHook = injector.getInstance(TaskShutDownHook.class);
+
+        Optional<TaskShutDownHook> optionalShutDownHook = Optional.absent();
+        try {
+            TaskShutDownHook shutDownHook = injector.getInstance(TaskShutDownHook.class);
+            optionalShutDownHook = Optional.of(shutDownHook);
+        } catch (ProvisionException ex) {
+        }
+
         try {
             DistributionManager distributionManager =
-                    new DistributionManager(client, taskList, appName, instanceId, metricRegistry, shutDownHook);
+                    new DistributionManager(client, taskList, appName, instanceId, metricRegistry, optionalShutDownHook);
             WorkerManager workerManager = new WorkerManager(taskFactory, distributionManager);
             workerManager.start();
             return workerManager;
