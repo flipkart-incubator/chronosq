@@ -29,11 +29,6 @@
             <version>1.1-SNAPSHOT</version>
         </dependency>
 
-        <dependency>
-            <groupId>com.netflix.hystrix.customized</groupId>
-            <artifactId>hystrix-core</artifactId>
-            <version>1.2-SNAPSHOT</version>
-        </dependency>
 
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
