@@ -128,37 +128,7 @@
             <id>cloudera-repo-releases</id>
             <url>https://repository.cloudera.com/artifactory/repo/</url>
         </repository>
-        <!--<repository>-->
-            <!--<id>codehaus</id>-->
-            <!--<url>http://repository.codehaus.org/org/codehaus</url>-->
-        <!--</repository>-->
-        <repository>
-            <id>libs-snapshots-local</id>
-            <name>libs-snapshots</name>
-            <url>http://artifactory.nm.flipkart.com:8081/artifactory/libs-snapshots-local</url>
-        </repository>
-        <repository>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-            <id>libs-releases</id>
-            <name>libs-releases</name>
-            <url>http://artifactory.nm.flipkart.com:8081/artifactory/libs-releases</url>
-        </repository>
-        <repository>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-            <id>libs-releases-local</id>
-            <name>libs-releases-local</name>
-            <url>http://artifactory.nm.flipkart.com:8081/artifactory/libs-releases-local</url>
-        </repository>
-        <repository>
-            <snapshots/>
-            <id>libs-snapshots</id>
-            <name>libs-snapshots</name>
-            <url>http://artifactory.nm.flipkart.com:8081/artifactory/libs-snapshots</url>
-        </repository>
+
 
     </repositories>
 </project>
