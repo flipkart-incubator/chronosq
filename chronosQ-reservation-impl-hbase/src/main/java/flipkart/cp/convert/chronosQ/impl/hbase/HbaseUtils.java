@@ -8,7 +8,7 @@ import org.apache.hadoop.hbase.util.Bytes;
 import java.util.Map;
 
 public  class HbaseUtils {
-    public static Scan getScanner(String startRow, String stopRow ,byte[] columnFamily){
+    public static Scan getScanner(String startRow, String stopRow, byte[] columnFamily){
         Scan scanner = new Scan();
         scanner.addFamily(columnFamily);
         scanner.setStartRow(Bytes.toBytes(startRow));
@@ -17,15 +17,15 @@ public  class HbaseUtils {
         return scanner;
     }
 
-    public static Put createPut(String rowkey,byte[] columnFamily, Map<byte[], byte[]> data){
-        Put cellput = new Put(Bytes.toBytes(rowkey));
-        for(Map.Entry<byte[] , byte[]> entry : data.entrySet())  {
-            cellput.add(columnFamily,entry.getKey(),entry.getValue());
+    public static Put createPut(String rowKey, byte[] columnFamily, Map<byte[], byte[]> data){
+        Put cellPut = new Put(Bytes.toBytes(rowKey));
+        for(Map.Entry<byte[], byte[]> entry : data.entrySet())  {
+            cellPut.addColumn(columnFamily, entry.getKey(), entry.getValue());
         }
-        return cellput;
+        return cellPut;
     }
 
-    public static Get createGet(String rowKey,byte[]columnFamily ){
+    public static Get createGet(String rowKey, byte[]columnFamily ){
         Get get = new Get(Bytes.toBytes(rowKey));
         get.addFamily(columnFamily);
         return get;

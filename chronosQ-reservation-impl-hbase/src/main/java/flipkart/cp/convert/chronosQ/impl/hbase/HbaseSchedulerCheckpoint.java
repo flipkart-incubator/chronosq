@@ -3,9 +3,8 @@ package flipkart.cp.convert.chronosQ.impl.hbase;
 import flipkart.cp.convert.chronosQ.core.SchedulerCheckpointer;
 import flipkart.cp.convert.chronosQ.exceptions.ErrorCode;
 import flipkart.cp.convert.chronosQ.exceptions.SchedulerException;
-import org.apache.hadoop.hbase.client.HTableInterface;
-import org.apache.hadoop.hbase.client.HTablePool;
-import org.apache.hadoop.hbase.client.Result;
+import org.apache.hadoop.hbase.TableName;
+import org.apache.hadoop.hbase.client.*;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,14 +21,14 @@ public class HbaseSchedulerCheckpoint implements SchedulerCheckpointer {
     static final String DELIMITER="__";
     static final byte[] QUALIFIER = Bytes.toBytes("val");
 
-    final HTablePool hTablePool;
+    final Connection hConnection;
     final String tableName;
     final byte[] columnFamily;
     final String instanceName;
 
 
-    public HbaseSchedulerCheckpoint(HTablePool hTablePool, String tableName, String columnFamily, String instanceName){
-        this.hTablePool = hTablePool;
+    public HbaseSchedulerCheckpoint(Connection hConnection, String tableName, String columnFamily, String instanceName){
+        this.hConnection = hConnection;
         this.tableName = tableName;
         this.columnFamily = Bytes.toBytes(columnFamily);
         this.instanceName = instanceName;
@@ -38,49 +37,51 @@ public class HbaseSchedulerCheckpoint implements SchedulerCheckpointer {
     @Override
     public String peek(int partitionNum) throws SchedulerException {
         String timerKey = getTimerKey(partitionNum);
-        HTableInterface hTableInterface = getHTableInterface();
+        Table hTable = null;
         try {
-            Result result =  hTableInterface.get(HbaseUtils.createGet(timerKey,columnFamily));
-            NavigableMap<byte[],byte[]> fmap = result.getFamilyMap(columnFamily);
-            String value = new String(fmap.get(QUALIFIER));
+            hTable = getHTable();
+            Result result =  hTable.get(HbaseUtils.createGet(timerKey, columnFamily));
+            NavigableMap<byte[],byte[]> fMap = result.getFamilyMap(columnFamily);
+            String value = new String(fMap.get(QUALIFIER));
             log.info("Fetching value for key " + timerKey + "is-" + value);
             return value;
         } catch (Exception ex) {
             log.error("Exception occurred for " + timerKey + ex.fillInStackTrace());
             throw new SchedulerException(ex, ErrorCode.DATASTORE_CHECKPOINT_ERROR);
         }   finally {
-            releaseHTableInterface(hTableInterface);
+            releaseHTableInterface(hTable);
         }
     }
 
     @Override
-    public void set( String value, int partitionNum) throws SchedulerException {
+    public void set(String value, int partitionNum) throws SchedulerException {
         String timerKey = getTimerKey(partitionNum);
-        Map<byte[], byte[]>  data = new HashMap<byte[], byte[]> ();
+        Map<byte[], byte[]>  data = new HashMap<>();
         data.put(QUALIFIER, Bytes.toBytes(value));
-        HTableInterface hTableInterface = getHTableInterface();
+        Table hTable = null;
         try {
-            hTableInterface.put(HbaseUtils.createPut(timerKey, columnFamily, data));
+            hTable = getHTable();
+            hTable.put(HbaseUtils.createPut(timerKey, columnFamily, data));
             log.info("Setting value to key " + timerKey + " to-" + value);
         } catch (Exception ex) {
             log.error("Exception occurred for " + timerKey + "-" + value + ex.fillInStackTrace());
             throw new SchedulerException(ex, ErrorCode.DATASTORE_CHECKPOINT_ERROR);
         }  finally {
-            releaseHTableInterface(hTableInterface);
+            releaseHTableInterface(hTable);
         }
 
     }
 
-    private HTableInterface getHTableInterface(){
-        return  hTablePool.getTable(tableName);
+    private Table getHTable() throws IOException {
+        return  hConnection.getTable(TableName.valueOf(tableName));
     }
 
-    private void  releaseHTableInterface(HTableInterface hTableInterface) throws SchedulerException {
+    private void  releaseHTableInterface(Table hTable) throws SchedulerException {
         try {
-            if(null != hTableInterface)
-                hTableInterface.close();
+            if(null != hTable)
+                hTable.close();
         } catch (IOException e) {
-            log.error("Exception occurred While closing htable interface - " +tableName + "-" + e.fillInStackTrace());
+            log.error("Exception occurred While closing hTable - " +tableName + "-" + e.fillInStackTrace());
             throw new SchedulerException(e, ErrorCode.DATASTORE_CHECKPOINT_ERROR);
         }
     }
