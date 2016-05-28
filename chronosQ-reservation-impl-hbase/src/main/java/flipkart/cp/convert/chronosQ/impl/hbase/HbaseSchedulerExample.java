@@ -36,7 +36,7 @@ public class HbaseSchedulerExample {
         Long time = System.currentTimeMillis();
 
         //Scheduler Store
-        HbaseSchedulerStore hbaseSchedulerStore =  new HbaseSchedulerStore(hConnection, "connekt_scheduled_requests", "d", instanceName);
+        HbaseSchedulerStore hbaseSchedulerStore =  new HbaseSchedulerStore(hConnection, "connekt-scheduled-requests", "d", instanceName);
         hbaseSchedulerStore.add("entry1", time, 1);
         hbaseSchedulerStore.remove("entry1", time, 1);
 
@@ -64,7 +64,7 @@ public class HbaseSchedulerExample {
         hbaseSchedulerStore.removeBulk(time, 2, entries);
 
         //scheduler check-pointer
-        HbaseSchedulerCheckpoint hbaseSchedulerCheckpoint =  new HbaseSchedulerCheckpoint(hConnection, "connekt_scheduled_requests", "d", instanceName);
+        HbaseSchedulerCheckpoint hbaseSchedulerCheckpoint =  new HbaseSchedulerCheckpoint(hConnection, "connekt-schedule-checkpoints", "d", instanceName);
         hbaseSchedulerCheckpoint.set(Long.toString(time), 2);
         String value = hbaseSchedulerCheckpoint.peek(2);
         System.out.println("peek value: " + value);
