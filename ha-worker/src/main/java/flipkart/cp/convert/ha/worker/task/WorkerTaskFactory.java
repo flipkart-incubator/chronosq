@@ -5,6 +5,6 @@ package flipkart.cp.convert.ha.worker.task;
  */
 public interface WorkerTaskFactory {
 
-    Runnable getTask(String taskName);
+    StoppableTask getTask(String taskName);
 
 }

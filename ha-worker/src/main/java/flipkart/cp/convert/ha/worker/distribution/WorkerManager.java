@@ -1,9 +1,8 @@
 package flipkart.cp.convert.ha.worker.distribution;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
 import flipkart.cp.convert.ha.worker.exception.WorkerException;
-import flipkart.cp.convert.ha.worker.task.TaskShutDownHook;
+import flipkart.cp.convert.ha.worker.task.StoppableTask;
 import flipkart.cp.convert.ha.worker.task.WorkerTaskFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,7 +18,7 @@ public class WorkerManager implements Restartable {
     private final DistributionManager distributionManager;
     @VisibleForTesting
     private ExecutorService executorService;
-    private List<Runnable> taskList;
+    private List<StoppableTask> taskList;
     static Logger log = LoggerFactory.getLogger(WorkerManager.class.getName());
 
     public WorkerManager(WorkerTaskFactory workerTaskFactory, DistributionManager distributionManager) {
@@ -37,25 +36,30 @@ public class WorkerManager implements Restartable {
             log.info("Task ids " + taskIds);
             for (String taskId : taskIds) {
                 log.info("Starting Thread for " + taskId);
-                Runnable task = workerTaskFactory.getTask(taskId);
+                StoppableTask task = workerTaskFactory.getTask(taskId);
                 executorService.submit(task);
                 taskList.add(task);
             }
         }
     }
 
-    private synchronized void _stopExecutorsIdempotent() throws WorkerException {
+    private synchronized void _stopExecutorsIdempotent() {
         if (executorService != null && !executorService.isShutdown()) {
             log.info("Shutting down at " + new Date());
-            Optional<TaskShutDownHook> shutDownHook = distributionManager.getTaskShutDownHook();
-            if (shutDownHook.isPresent()) {
-                shutDownHook.get().shutDownTasks(taskList);
+
+            for(StoppableTask task : taskList) {
+                try {
+                    task.stopGraceFully();
+                } catch (WorkerException ex) {
+                    task.stopPoisonPill();
+                }
             }
+
             executorService.shutdownNow();
         }
     }
 
-    public void stop() throws WorkerException {
+    public void stop() {
         _stopExecutorsIdempotent();
     }
 

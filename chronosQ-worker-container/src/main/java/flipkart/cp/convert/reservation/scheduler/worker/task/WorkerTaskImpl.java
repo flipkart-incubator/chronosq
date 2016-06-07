@@ -102,6 +102,16 @@ public class WorkerTaskImpl extends WorkerTask {
         this.interrupt = true;
     }
 
+    @Override
+    public void stopGraceFully() {
+        interrupt();
+    }
+
+    @Override
+    public void stopPoisonPill() {
+        //InterruptedException can be swallowed by enclosing code - child thread isnt guaranteed to be killed.
+        Thread.currentThread().stop();
+    }
     private long calculateNextIntervalForProcess(int partitionNum) throws SchedulerException {
 
         long timerKeyConverted;

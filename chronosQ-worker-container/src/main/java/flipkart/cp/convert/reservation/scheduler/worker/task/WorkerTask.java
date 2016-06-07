@@ -1,9 +1,11 @@
 package flipkart.cp.convert.reservation.scheduler.worker.task;
 
+import flipkart.cp.convert.ha.worker.task.StoppableTask;
+
 /**
  * Created by pradeep on 16/02/15.
  */
-public abstract class WorkerTask implements Runnable {
+public abstract class WorkerTask implements StoppableTask {
 
     private final Integer partitionNum;
 
