@@ -33,6 +33,15 @@ public class RedisSchedulerStore implements SchedulerStore {
         }
     }
 
+    private void _releaseBrokenPool(Jedis jedis, int partitionNum) throws SchedulerException {
+        try {
+            Pool<Jedis> jedisPool = redisParitioner.getJedis(partitionNum);
+            jedisPool.returnBrokenResource(jedis);
+        } catch (Exception e) {
+            throw new SchedulerException(e, ErrorCode.DATASTORE_READWRITE_ERROR);
+        }
+    }
+
     private Jedis _getInstance(int partitionNum) throws SchedulerException {
         try {
             Pool<Jedis> jedisPool = redisParitioner.getJedis(partitionNum);
@@ -54,6 +63,7 @@ public class RedisSchedulerStore implements SchedulerStore {
             log.info("Added value " + value + "To " + key);
         } catch (Exception ex) {
             log.error("Exception occurred  for -" + value + "Key" + key + "Partition " + partitionNum + "-" + ex.getMessage());
+            _releaseBrokenPool(jedis, partitionNum);
             throw new SchedulerException(ex, ErrorCode.DATASTORE_READWRITE_ERROR);
         } finally {
             if ((jedis != null))
@@ -76,6 +86,7 @@ public class RedisSchedulerStore implements SchedulerStore {
             return result;
         } catch (Exception ex) {
             log.error("Exception occurred  for -" + value + "Key" + oldKey + "Partition " + partitionNum + "-" + ex.getMessage());
+            _releaseBrokenPool(jedis, partitionNum);
             throw new SchedulerException(ex, ErrorCode.DATASTORE_READWRITE_ERROR);
         } finally {
             if ((jedis != null))
@@ -97,6 +108,7 @@ public class RedisSchedulerStore implements SchedulerStore {
             return result;
         } catch (Exception ex) {
             log.error("Exception occurred  for -" + value + "Key" + key + "Partition " + partitionNum + "-" + ex.getMessage());
+            _releaseBrokenPool(jedis, partitionNum);
             throw new SchedulerException(ex, ErrorCode.DATASTORE_READWRITE_ERROR);
         } finally {
             if ((jedis != null))
@@ -116,6 +128,7 @@ public class RedisSchedulerStore implements SchedulerStore {
             log.info("Get For " + key + "-" + resultSet);
         } catch (Exception ex) {
             log.error("Exception occurred  for -" + "Key" + key + "Partition " + partitionNum + "-" + ex.getMessage());
+            _releaseBrokenPool(jedis, partitionNum);
             throw new SchedulerException(ex, ErrorCode.DATASTORE_READWRITE_ERROR);
         } finally {
             if ((jedis != null))
@@ -137,6 +150,7 @@ public class RedisSchedulerStore implements SchedulerStore {
             log.info("Get For " + key + "-" + resultSet);
         } catch (Exception ex) {
             log.error("Exception occurred  for -" + "Key" + key + "Partition " + partitionNum + "-" + ex.getMessage());
+            _releaseBrokenPool(jedis, partitionNum);
             throw new SchedulerException(ex, ErrorCode.DATASTORE_READWRITE_ERROR);
         } finally {
             if ((jedis != null))
@@ -158,6 +172,7 @@ public class RedisSchedulerStore implements SchedulerStore {
             log.info("Removed values " + values + "From" + key);
         } catch (Exception ex) {
             log.error("Exception occurred  for -" + values + "Key" + key + "Partition " + partitionNum + "-" + ex.getMessage());
+            _releaseBrokenPool(jedis, partitionNum);
             throw new SchedulerException(ex, ErrorCode.DATASTORE_READWRITE_ERROR);
         } finally {
             if ((jedis != null))
