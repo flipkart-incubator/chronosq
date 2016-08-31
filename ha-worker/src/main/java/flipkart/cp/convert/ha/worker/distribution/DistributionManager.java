@@ -24,14 +24,13 @@ import java.util.concurrent.TimeUnit;
  */
 public class DistributionManager implements Closeable, TreeCacheListener {
 
-    private static final String PREFIX_PATH = "/scheduler";
+    private static final String PREFIX_PATH = "/ha-nodes";
 
     private final PersistentEphemeralNode myNode;
     private final String zkPrefix;
     private TaskList taskList;
     private final String instanceId;
     private final CuratorFramework client;
-    private final String appName;
     private List<String> tasksToRun;
     private List<String> workerInstances;
     private Restartable restartable;
@@ -41,7 +40,6 @@ public class DistributionManager implements Closeable, TreeCacheListener {
     public DistributionManager(CuratorFramework client, TaskList taskList, String appName, String instanceId, MetricRegistry metricRegistry) throws WorkerException {
         this.taskList = taskList;
         this.client = client;
-        this.appName = appName;
         this.instanceId = instanceId;
         this.metricRegistry = metricRegistry;
         this.zkPrefix = PREFIX_PATH + "/" + appName;

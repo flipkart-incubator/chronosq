@@ -10,7 +10,7 @@
         <groupId>chronosQ</groupId>
         <version>1.6.1-SNAPSHOT</version>
     </parent>
-    <version>1.6.1-SNAPSHOT</version>
+    <version>1.6.2</version>
 
 
     <modelVersion>4.0.0</modelVersion>
