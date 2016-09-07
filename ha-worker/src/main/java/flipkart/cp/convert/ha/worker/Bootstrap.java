@@ -1,30 +1,11 @@
 package flipkart.cp.convert.ha.worker;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.GnuParser;
-import org.apache.commons.cli.OptionBuilder;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
-import org.apache.curator.framework.CuratorFramework;
-import org.reflections.Reflections;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.codahale.metrics.MetricRegistry;
 import com.google.common.base.Function;
+import com.google.common.base.Strings;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-
 import flipkart.cp.convert.ha.worker.di.WorkerModule;
 import flipkart.cp.convert.ha.worker.distribution.DistributionManager;
 import flipkart.cp.convert.ha.worker.distribution.WorkerManager;
@@ -32,6 +13,19 @@ import flipkart.cp.convert.ha.worker.exception.ErrorCode;
 import flipkart.cp.convert.ha.worker.exception.WorkerException;
 import flipkart.cp.convert.ha.worker.task.TaskList;
 import flipkart.cp.convert.ha.worker.task.WorkerTaskFactory;
+import org.apache.commons.cli.*;
+import org.apache.curator.framework.CuratorFramework;
+import org.reflections.Reflections;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Created by pradeep on 18/02/15.
@@ -47,6 +41,7 @@ public class Bootstrap {
     private final String instanceId;
     private final String nameSpace;
     private final String hostName;
+    private String listenerPathSuffix = "";
     Reflections reflections;
 
     public Bootstrap(String instanceId, String nameSpace, String hostName) {
@@ -122,9 +117,10 @@ public class Bootstrap {
         WorkerTaskFactory taskFactory = injector.getInstance(WorkerTaskFactory.class);
         TaskList taskList = injector.getInstance(TaskList.class);
         MetricRegistry metricRegistry = injector.getInstance(MetricRegistry.class);
+        String listenerPath = buildListenerPath(appName);
         try {
             DistributionManager distributionManager =
-                    new DistributionManager(client, taskList, appName, instanceId, metricRegistry);
+                    new DistributionManager(client, taskList, listenerPath, instanceId, metricRegistry);
             WorkerManager workerManager = new WorkerManager(taskFactory, distributionManager);
             workerManager.start();
             return workerManager;
@@ -132,6 +128,13 @@ public class Bootstrap {
             log.error("Exception occurred " + ex.fillInStackTrace());
             throw new WorkerException(ex, ErrorCode.WORKER_RUNTIME_ERROR);
         }
+    }
+
+    /** adding PathSuffix to appName to segregate listeners for different envs */
+    private String buildListenerPath(String appName) {
+        String listenerPath = appName;
+        if (!Strings.isNullOrEmpty(listenerPathSuffix)) listenerPath += "-" + listenerPathSuffix;
+        return listenerPath;
     }
 
     private void awaitShutdown() {
@@ -165,6 +168,9 @@ public class Bootstrap {
         }
     }
 
+    public void setListenerPathSuffix(String listenerPathSuffix) {
+        this.listenerPathSuffix = listenerPathSuffix;
+    }
 
     private static Options opts = new Options().addOption(
             OptionBuilder.isRequired(true).hasArgs(1).withLongOpt("instance-id")

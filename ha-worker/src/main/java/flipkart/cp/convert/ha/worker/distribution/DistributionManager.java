@@ -37,12 +37,12 @@ public class DistributionManager implements Closeable, TreeCacheListener {
     private MetricRegistry metricRegistry;
     private static Logger log = LoggerFactory.getLogger(DistributionManager.class.getName());
 
-    public DistributionManager(CuratorFramework client, TaskList taskList, String appName, String instanceId, MetricRegistry metricRegistry) throws WorkerException {
+    public DistributionManager(CuratorFramework client, TaskList taskList, String listenerPath, String instanceId, MetricRegistry metricRegistry) throws WorkerException {
         this.taskList = taskList;
         this.client = client;
         this.instanceId = instanceId;
         this.metricRegistry = metricRegistry;
-        this.zkPrefix = PREFIX_PATH + "/" + appName;
+        this.zkPrefix = PREFIX_PATH + "/" + listenerPath;
         this.myNode = new PersistentEphemeralNode(client, PersistentEphemeralNode.Mode.EPHEMERAL, zkPrefix + "/" + this.instanceId, this.instanceId.getBytes());
         myNode.start();
         try {
@@ -53,7 +53,7 @@ public class DistributionManager implements Closeable, TreeCacheListener {
         }
         log.info("Ephemral node created " + instanceId);
         _attachListener();
-        metricRegistry.register(MetricRegistry.name(DistributionManager.class, appName,"WorkerInstances", "count"),
+        metricRegistry.register(MetricRegistry.name(DistributionManager.class, listenerPath,"WorkerInstances", "count"),
                 new Gauge<Integer>() {
                     @Override
                     public Integer getValue() {
