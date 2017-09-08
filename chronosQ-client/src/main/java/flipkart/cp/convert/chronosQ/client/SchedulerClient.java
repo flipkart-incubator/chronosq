@@ -54,7 +54,7 @@ public class SchedulerClient<Entry extends SchedulerEntry> {
             log.error("Unable to add to scheduler  :" + val + "-" + time + ex.fillInStackTrace());
             throw new SchedulerException(ex, ErrorCode.DATASTORE_READWRITE_ERROR);
         } finally {
-            if ((context != null))
+            if (context != null)
                 context.stop();
         }
 
@@ -79,7 +79,7 @@ public class SchedulerClient<Entry extends SchedulerEntry> {
             log.error("Unable to update value :" + val + "-" + "From " + oldTime + " To" + newTime + ex.fillInStackTrace());
             throw new SchedulerException(ex, ErrorCode.DATASTORE_READWRITE_ERROR);
         } finally {
-            if ((context != null))
+            if (context != null)
                 context.stop();
         }
     }
@@ -103,7 +103,7 @@ public class SchedulerClient<Entry extends SchedulerEntry> {
             log.error("Unable to remove from scheduler :" + val + "-" + time + ex.fillInStackTrace());
             throw new SchedulerException(ex, ErrorCode.DATASTORE_READWRITE_ERROR);
         } finally {
-            if ((context != null))
+            if (context != null)
                 context.stop();
         }
     }
