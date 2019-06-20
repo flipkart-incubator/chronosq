@@ -30,7 +30,7 @@ public class Example {
         ArrayList<Pool<Jedis>> jedisPoolList = new ArrayList<Pool<Jedis>>();
         jedisPoolList.add(jedisPool);
         RedisParitioner redisParitioner = new RedisParitioner(jedisPoolList);
-        RedisSchedulerStore redisSchedulerStore = new RedisSchedulerStore(redisParitioner);
+        RedisSchedulerStore redisSchedulerStore = new RedisSchedulerStore(redisParitioner, "namespace");
         TimeBucket subMinuteTimeBucket = new SecondGroupedTimeBucket(20);
         MetricRegistry metricRegistry = new MetricRegistry();
         SchedulerClient schedulerClient = new SchedulerClient(redisSchedulerStore, subMinuteTimeBucket, partitioner, metricRegistry);

@@ -6,16 +6,17 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>chronosQ-reservation-impl-kafka</artifactId>
+    <version>1.6.7</version>
     <dependencies>
         <dependency>
             <groupId>chronosQ</groupId>
             <artifactId>chronosQ-core</artifactId>
-            <version>1.6</version>
+            <version>1.6.7</version>
         </dependency>
         <dependency>
             <groupId>org.apache.kafka</groupId>
-            <artifactId>kafka_2.10</artifactId>
-            <version>0.8.0</version>
+            <artifactId>kafka_2.11</artifactId>
+            <version>0.10.0.1</version>
             <exclusions>
                 <exclusion>
                     <groupId>com.sun.jdmk</groupId>
@@ -26,6 +27,12 @@
                     <artifactId>jmxri</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.8</version>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
 </project>

@@ -3,6 +3,7 @@ package flipkart.cp.convert.chronosQ.impl.kafka;
 import flipkart.cp.convert.chronosQ.exceptions.SchedulerException;
 import kafka.producer.KeyedMessage;
 import kafka.producer.ProducerConfig;
+import org.apache.kafka.clients.producer.ProducerRecord;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,10 +18,10 @@ public class KafkaSchedulerSinkExample {
         props.put("metadata.broker.list", "tgstage-bro-app-0002.ch.flipkart.com:9092");
         props.put("producer.type", "sync");
         props.put("serializer.class", "kafka.serializer.StringEncoder");
-        KafkaSchedulerSink kafkaSchedulerSink = new KafkaSchedulerSink(new ProducerConfig(props), "test_scheduler_002", new KafkaMessage() {
+        KafkaSchedulerSink kafkaSchedulerSink = new KafkaSchedulerSink(props, "test_scheduler_002", new KafkaMessage() {
             @Override
-            public KeyedMessage<String, String> getKeyedMessage(String topic, String value) {
-                return new KeyedMessage<String, String>(topic, value+value , value);
+            public ProducerRecord<byte[], byte[]> getKeyedMessage(String topic, String value) {
+                return new ProducerRecord<byte[], byte[]>(topic, (value+value).getBytes() , value.getBytes());
             }
         });
         List<String> values = new ArrayList<String>();

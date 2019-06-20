@@ -108,6 +108,10 @@ public class SchedulerClient<Entry extends SchedulerEntry> {
         }
     }
 
+    public static <Entry extends SchedulerEntry> SchedulerClient.Builder<Entry> builder() {
+        return new SchedulerClient.Builder<>();
+    }
+
     public static class Builder<Entry extends SchedulerEntry> {
         private SchedulerStore store;
         private TimeBucket timeBucket;

@@ -8,6 +8,7 @@
         <version>1.6</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
+    <version>1.6.7</version>
 
     <artifactId>chronosQ-client</artifactId>
 
@@ -15,7 +16,7 @@
         <dependency>
             <groupId>chronosQ</groupId>
             <artifactId>chronosQ-core</artifactId>
-            <version>1.6</version>
+            <version>1.6.7</version>
         </dependency>
     </dependencies>
 

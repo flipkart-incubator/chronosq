@@ -3,6 +3,7 @@ package flipkart.cp.convert.chronosQ.impl.redis;
 import flipkart.cp.convert.chronosQ.core.SchedulerStore;
 import flipkart.cp.convert.chronosQ.exceptions.ErrorCode;
 import flipkart.cp.convert.chronosQ.exceptions.SchedulerException;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
@@ -13,14 +14,19 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-
+@Slf4j
 public class RedisSchedulerStore implements SchedulerStore {
     private final RedisParitioner redisParitioner;
     private static final String DELIMITER = "-";
-    static Logger log = LoggerFactory.getLogger(RedisSchedulerStore.class.getName());
+    private final String keyPrefix;
 
     public RedisSchedulerStore(RedisParitioner redisParitioner) {
+        this(redisParitioner, "");
+    }
+
+    public RedisSchedulerStore(RedisParitioner redisParitioner, String keyPrefix) {
         this.redisParitioner = redisParitioner;
+        this.keyPrefix = keyPrefix;
     }
 
     private Jedis _getInstance(int partitionNum) throws SchedulerException {
@@ -31,7 +37,6 @@ public class RedisSchedulerStore implements SchedulerStore {
             throw new SchedulerException(e, ErrorCode.DATASTORE_READWRITE_ERROR);
         }
     }
-
 
     @Override
     public void add(String value, long time, int partitionNum) throws SchedulerException {
@@ -155,9 +160,9 @@ public class RedisSchedulerStore implements SchedulerStore {
         }
     }
 
-
-    private static String getKey(long time, int partitionNum) {
-        return convertNumToString(time) + DELIMITER + convertNumToString(partitionNum);
+    private String getKey(long time, int partitionNum) {
+        String prefix = keyPrefix.equals("") ? "" : keyPrefix + DELIMITER;
+        return prefix + convertNumToString(time) + DELIMITER + convertNumToString(partitionNum);
     }
 
     private static String convertNumToString(long time) {

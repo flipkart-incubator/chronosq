@@ -10,6 +10,7 @@
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
+    <version>1.6.7</version>
 
     <artifactId>chronosQ-core</artifactId>
     <dependencies>
