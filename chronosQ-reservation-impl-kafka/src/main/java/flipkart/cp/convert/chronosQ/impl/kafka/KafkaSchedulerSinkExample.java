@@ -1,8 +1,6 @@
 package flipkart.cp.convert.chronosQ.impl.kafka;
 
 import flipkart.cp.convert.chronosQ.exceptions.SchedulerException;
-import kafka.producer.KeyedMessage;
-import kafka.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
 
 import java.util.ArrayList;
