@@ -98,18 +98,18 @@
                 </executions>
             </plugin>
 
-            <plugin>
-                <groupId>org.honton.chas</groupId>
-                <artifactId>exists-maven-plugin</artifactId>
-                <version>0.1.0</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>remote</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
+<!--            <plugin>-->
+<!--                <groupId>org.honton.chas</groupId>-->
+<!--                <artifactId>exists-maven-plugin</artifactId>-->
+<!--                <version>0.1.0</version>-->
+<!--                <executions>-->
+<!--                    <execution>-->
+<!--                        <goals>-->
+<!--                            <goal>remote</goal>-->
+<!--                        </goals>-->
+<!--                    </execution>-->
+<!--                </executions>-->
+<!--            </plugin>-->
 
         </plugins>
     </build>
@@ -132,7 +132,6 @@
                 <!--<artifactId>maven-deploy-plugin</artifactId>-->
                 <!--<version>2.7</version>-->
             <!--</plugin>-->
-
         <!--</plugins>-->
     <!--</build>-->
 
@@ -141,7 +140,5 @@
             <id>cloudera-repo-releases</id>
             <url>https://repository.cloudera.com/artifactory/repo/</url>
         </repository>
-
-
     </repositories>
 </project>

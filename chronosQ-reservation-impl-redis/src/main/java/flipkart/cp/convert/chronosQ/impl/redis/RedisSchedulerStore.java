@@ -161,7 +161,7 @@ public class RedisSchedulerStore implements SchedulerStore {
     }
 
     private String getKey(long time, int partitionNum) {
-        String prefix = keyPrefix.equals("") ? "" : keyPrefix + DELIMITER;
+        String prefix = keyPrefix != null && !keyPrefix.equals("") ? keyPrefix + DELIMITER : "";
         return prefix + convertNumToString(time) + DELIMITER + convertNumToString(partitionNum);
     }
 

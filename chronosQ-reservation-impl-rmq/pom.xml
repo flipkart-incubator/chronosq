@@ -8,14 +8,14 @@
         <version>1.6</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <version>1.6.7</version>
+    <version>1.6.8-SNAPSHOT</version>
 
     <artifactId>chronosQ-reservation-impl-rmq</artifactId>
     <dependencies>
         <dependency>
             <groupId>chronosQ</groupId>
             <artifactId>chronosQ-core</artifactId>
-            <version>1.6.7</version>
+            <version>1.6.8-SNAPSHOT</version>
         </dependency>
 
         <dependency>

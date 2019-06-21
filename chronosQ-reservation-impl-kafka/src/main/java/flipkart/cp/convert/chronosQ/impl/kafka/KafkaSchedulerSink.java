@@ -38,7 +38,10 @@ public class KafkaSchedulerSink implements SchedulerSink {
             try {
                 log.debug("Pushing to kafka message: {}", value);
                 producer.send(kafkaMessage.getKeyedMessage(topic, value), (metadata, exception) -> {
-                    completableFuture.complete(metadata);
+                    if(exception != null)
+                        completableFuture.completeExceptionally(exception);
+                    else
+                        completableFuture.complete(metadata);
                 });
                 return completableFuture;
             } catch (Exception e) {
@@ -62,7 +65,10 @@ public class KafkaSchedulerSink implements SchedulerSink {
             List<CompletableFuture<RecordMetadata>> results = data.stream().map(elem -> {
                 CompletableFuture<RecordMetadata> completableFuture = new CompletableFuture<>();
                 producer.send(elem, (metadata, exception) -> {
-                    completableFuture.complete(metadata);
+                    if(exception != null)
+                        completableFuture.completeExceptionally(exception);
+                    else
+                        completableFuture.complete(metadata);
                 });
                 return completableFuture;
             }).collect(Collectors.toList());

@@ -11,7 +11,7 @@
         <version>1.6</version>
     </parent>
     
-    <version>1.6.7</version>
+    <version>1.6.8-SNAPSHOT</version>
     <modelVersion>4.0.0</modelVersion>
 
     <dependencies>

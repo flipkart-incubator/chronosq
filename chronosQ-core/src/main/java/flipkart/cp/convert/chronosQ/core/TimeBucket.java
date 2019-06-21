@@ -6,4 +6,6 @@ public interface TimeBucket {
 
     long next(long epochTimestamp);
 
+    long previous(long epochTimestamp);
+
 }
