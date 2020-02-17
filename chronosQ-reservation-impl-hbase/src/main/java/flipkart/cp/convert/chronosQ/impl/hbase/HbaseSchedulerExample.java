@@ -1,5 +1,6 @@
 package flipkart.cp.convert.chronosQ.impl.hbase;
 
+import flipkart.cp.convert.chronosQ.core.SchedulerData;
 import flipkart.cp.convert.chronosQ.exceptions.SchedulerException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
@@ -9,6 +10,7 @@ import org.apache.hadoop.hbase.client.ConnectionFactory;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Created by tushar.mandar on 2/26/15.
@@ -30,41 +32,41 @@ public class HbaseSchedulerExample {
             e.printStackTrace();
         }
 
-        assert(null != hConnection): "hConnection is not initialized";
+        assert (null != hConnection) : "hConnection is not initialized";
 
         String instanceName = "instance1";
         Long time = System.currentTimeMillis();
 
         //Scheduler Store
-        HbaseSchedulerStore hbaseSchedulerStore =  new HbaseSchedulerStore(hConnection, "connekt-scheduled-requests", "d", instanceName);
-        hbaseSchedulerStore.add("entry1", time, 1);
+        HbaseSchedulerStore hbaseSchedulerStore = new HbaseSchedulerStore(hConnection, "connekt-scheduled-requests", "d", instanceName);
+        hbaseSchedulerStore.add(new SchedulerData("entry1"), time, 1);
         hbaseSchedulerStore.remove("entry1", time, 1);
 
-        hbaseSchedulerStore.add("entry2", time, 2);
-        hbaseSchedulerStore.add("entry3", time, 2);
-        hbaseSchedulerStore.add("entry4", time, 2);
+        hbaseSchedulerStore.add(new SchedulerData("entry2"), time, 2);
+        hbaseSchedulerStore.add(new SchedulerData("entry3"), time, 2);
+        hbaseSchedulerStore.add(new SchedulerData("entry4"), time, 2);
 
-        List<String> entries = hbaseSchedulerStore.get(time, 2);
-        assert(entries.size() > 0): String.format("No added entries found in scheduler store time - %d partition - %d", time, 2);
-        for(String entry : entries)
+        List<SchedulerData> entries = hbaseSchedulerStore.get(time, 2);
+        assert (entries.size() > 0) : String.format("No added entries found in scheduler store time - %d partition - %d", time, 2);
+        for (SchedulerData entry : entries)
             System.out.println("GET Response: " + entry);
 
         entries = hbaseSchedulerStore.getNextN(time, 2, 2);
-        assert(entries.size() > 0): String.format("No added entries found in scheduler store time - %d partition - %d", time, 2);
-        for(String entry : entries)
+        assert (entries.size() > 0) : String.format("No added entries found in scheduler store time - %d partition - %d", time, 2);
+        for (SchedulerData entry : entries)
             System.out.println("GET Next 2 Response: " + entry);
 
-        hbaseSchedulerStore.removeBulk(time, 2, entries);
+        hbaseSchedulerStore.removeBulk(time, 2, entries.stream().map(SchedulerData::getKey).collect(Collectors.toList()));
         entries = hbaseSchedulerStore.getNextN(time, 2, 2);
         System.out.println("GET Next 2 Response size after deleting 2: " + entries.size());
-        hbaseSchedulerStore.removeBulk(time, 2, entries);
+        hbaseSchedulerStore.removeBulk(time, 2, entries.stream().map(SchedulerData::getKey).collect(Collectors.toList()));
 
         entries = hbaseSchedulerStore.getNextN(time, 2, 2);
         System.out.println("GET Next 2 Response size after deleting all: " + entries.size());
-        hbaseSchedulerStore.removeBulk(time, 2, entries);
+        hbaseSchedulerStore.removeBulk(time, 2, entries.stream().map(SchedulerData::getKey).collect(Collectors.toList()));
 
         //scheduler check-pointer
-        HbaseSchedulerCheckpoint hbaseSchedulerCheckpoint =  new HbaseSchedulerCheckpoint(hConnection, "connekt-schedule-checkpoints", "d", instanceName);
+        HbaseSchedulerCheckpoint hbaseSchedulerCheckpoint = new HbaseSchedulerCheckpoint(hConnection, "connekt-schedule-checkpoints", "d", instanceName);
         hbaseSchedulerCheckpoint.set(Long.toString(time), 2);
         String value = hbaseSchedulerCheckpoint.peek(2);
         System.out.println("peek value: " + value);

@@ -8,10 +8,16 @@ import lombok.AllArgsConstructor;
 public class ExampleSchedulerEntry implements SchedulerEntry {
 
     private String value;
+    private String payload;
 
     @Override
-    public String getStringValue() {
+    public String getKey() {
         return value;
 
+    }
+
+    @Override
+    public String getPayload() {
+        return payload;
     }
 }

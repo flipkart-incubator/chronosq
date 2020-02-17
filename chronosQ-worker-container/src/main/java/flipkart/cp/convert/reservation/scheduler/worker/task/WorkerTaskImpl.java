@@ -3,16 +3,14 @@ package flipkart.cp.convert.reservation.scheduler.worker.task;
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
-import flipkart.cp.convert.chronosQ.core.SchedulerCheckpointer;
-import flipkart.cp.convert.chronosQ.core.SchedulerSink;
-import flipkart.cp.convert.chronosQ.core.SchedulerStore;
-import flipkart.cp.convert.chronosQ.core.TimeBucket;
+import flipkart.cp.convert.chronosQ.core.*;
 import flipkart.cp.convert.chronosQ.exceptions.SchedulerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Created with IntelliJ IDEA.
@@ -71,13 +69,13 @@ public class WorkerTaskImpl extends WorkerTask {
                 long currentDateTimeInMilliSec = getCurrentDateTimeInMilliSecs();
                 long nextIntervalForProcess = calculateNextIntervalForProcess(getPartitionNum());
                 while (!interrupt && nextIntervalForProcess <= currentDateTimeInMilliSec) {
-                    List<String> values = schedulerStore.getNextN(nextIntervalForProcess, getPartitionNum(), batchSize);
+                    List<SchedulerData> values = schedulerStore.getNextN(nextIntervalForProcess, getPartitionNum(), batchSize);
 
                     while (!interrupt && !values.isEmpty()) {
                         final Timer.Context context = sinkPushingTime.time();
                         schedulerSink.giveExpiredListForProcessing(values);
                         context.stop();
-                        schedulerStore.removeBulk(nextIntervalForProcess, getPartitionNum(), values);
+                        schedulerStore.removeBulk(nextIntervalForProcess, getPartitionNum(), values.stream().map(SchedulerData::getKey).collect(Collectors.toList()));
                         values = schedulerStore.getNextN(nextIntervalForProcess, getPartitionNum(), batchSize);
                     }
                     checkpointer.set(String.valueOf(nextIntervalForProcess), getPartitionNum());
@@ -88,10 +86,10 @@ public class WorkerTaskImpl extends WorkerTask {
                 // Sleeping if currently got processed
                 log.info("sleep for " + (nextIntervalForProcess - currentDateTimeInMilliSec));
                 Thread.sleep(nextIntervalForProcess - currentDateTimeInMilliSec);
-            } catch (InterruptedException e){
+            } catch (InterruptedException e) {
                 log.error("Thread interrupted. Breaking and Restarting. ", e);
                 break;
-            }catch (Exception ex) {
+            } catch (Exception ex) {
                 log.error("Exception in processing WorkerTaskImpl. Restarting ", ex);
             }
         }
@@ -112,6 +110,7 @@ public class WorkerTaskImpl extends WorkerTask {
         //InterruptedException can be swallowed by enclosing code - child thread isnt guaranteed to be killed.
         Thread.currentThread().stop();
     }
+
     private long calculateNextIntervalForProcess(int partitionNum) throws SchedulerException {
 
         long timerKeyConverted;

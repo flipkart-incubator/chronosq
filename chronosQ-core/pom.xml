@@ -12,12 +12,22 @@
     <modelVersion>4.0.0</modelVersion>
     <version>1.6.8-SNAPSHOT</version>
 
+    <properties>
+        <lombok.version>1.18.8</lombok.version>
+    </properties>
+
     <artifactId>chronosQ-core</artifactId>
     <dependencies>
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
             <version>18.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>${lombok.version}</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 

@@ -1,6 +1,7 @@
 package flipkart.cp.convert.chronosQ.impl.kafka;
 
 
+import flipkart.cp.convert.chronosQ.core.SchedulerData;
 import flipkart.cp.convert.chronosQ.core.SchedulerSink;
 import flipkart.cp.convert.chronosQ.exceptions.ErrorCode;
 import flipkart.cp.convert.chronosQ.exceptions.SchedulerException;
@@ -32,13 +33,13 @@ public class KafkaSchedulerSink implements SchedulerSink {
     }
 
     @Override
-    public CompletableFuture<RecordMetadata> giveExpiredForProcessing(String value) throws SchedulerException {
+    public CompletableFuture<RecordMetadata> giveExpiredForProcessing(SchedulerData value) throws SchedulerException {
         CompletableFuture<RecordMetadata> completableFuture = new CompletableFuture<>();
         if (null != value) {
             try {
                 log.debug("Pushing to kafka message: {}", value);
                 producer.send(kafkaMessage.getKeyedMessage(topic, value), (metadata, exception) -> {
-                    if(exception != null)
+                    if (exception != null)
                         completableFuture.completeExceptionally(exception);
                     else
                         completableFuture.complete(metadata);
@@ -54,9 +55,9 @@ public class KafkaSchedulerSink implements SchedulerSink {
     }
 
     @Override
-    public Future<List<RecordMetadata>> giveExpiredListForProcessing(List<String> storeEntries) throws SchedulerException {
+    public Future<List<RecordMetadata>> giveExpiredListForProcessing(List<SchedulerData> storeEntries) throws SchedulerException {
         List<ProducerRecord<byte[], byte[]>> data = new ArrayList<>();
-        for (String storeValue : storeEntries) {
+        for (SchedulerData storeValue : storeEntries) {
             if (null != storeValue) {
                 data.add(kafkaMessage.getKeyedMessage(topic, storeValue));
             }
@@ -65,7 +66,7 @@ public class KafkaSchedulerSink implements SchedulerSink {
             List<CompletableFuture<RecordMetadata>> results = data.stream().map(elem -> {
                 CompletableFuture<RecordMetadata> completableFuture = new CompletableFuture<>();
                 producer.send(elem, (metadata, exception) -> {
-                    if(exception != null)
+                    if (exception != null)
                         completableFuture.completeExceptionally(exception);
                     else
                         completableFuture.complete(metadata);

@@ -1,11 +1,10 @@
 package flipkart.cp.convert.chronosQ.impl.redis;
 
+import flipkart.cp.convert.chronosQ.core.SchedulerData;
 import flipkart.cp.convert.chronosQ.core.SchedulerStore;
 import flipkart.cp.convert.chronosQ.exceptions.ErrorCode;
 import flipkart.cp.convert.chronosQ.exceptions.SchedulerException;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.Pipeline;
 import redis.clients.util.Pool;
@@ -39,16 +38,19 @@ public class RedisSchedulerStore implements SchedulerStore {
     }
 
     @Override
-    public void add(String value, long time, int partitionNum) throws SchedulerException {
+    public void add(SchedulerData schedulerData, long time, int partitionNum) throws SchedulerException {
         Jedis jedis = null;
         String key = "";
         try {
             jedis = _getInstance(partitionNum);
             key = getKey(time, partitionNum);
-            jedis.sadd(key, value);
-            log.info("Added value " + value + "To " + key);
+            jedis.sadd(key, schedulerData.getKey());
+            if (schedulerData.getValue().isPresent()) {
+                jedis.set(schedulerData.getKey(), schedulerData.getValue().get());
+            }
+            log.info("Added value " + schedulerData.getKey() + "To " + key);
         } catch (Exception ex) {
-            log.error("Exception occurred  for -" + value + "Key" + key + "Partition " + partitionNum + "-" + ex.getMessage());
+            log.error("Exception occurred  for -" + schedulerData.getKey() + "Key" + key + "Partition " + partitionNum + "-" + ex.getMessage());
             throw new SchedulerException(ex, ErrorCode.DATASTORE_READWRITE_ERROR);
         } finally {
             if ((jedis != null))
@@ -57,7 +59,7 @@ public class RedisSchedulerStore implements SchedulerStore {
     }
 
     @Override
-    public Long update(String value, long oldTime, long newTime, int partitionNum) throws SchedulerException {
+    public Long update(SchedulerData schedulerData, long oldTime, long newTime, int partitionNum) throws SchedulerException {
         Jedis jedis = null;
         Long result;
         String oldKey = "";
@@ -66,11 +68,11 @@ public class RedisSchedulerStore implements SchedulerStore {
             jedis = _getInstance(partitionNum);
             oldKey = getKey(oldTime, partitionNum);
             newKey = getKey(newTime, partitionNum);
-            result = jedis.smove(oldKey, newKey, value);
-            log.info("Updated value " + value + "From " + oldKey + "To " + newKey);
+            result = jedis.smove(oldKey, newKey, schedulerData.getKey());
+            log.info("Updated value " + schedulerData.getKey() + "From " + oldKey + "To " + newKey);
             return result;
         } catch (Exception ex) {
-            log.error("Exception occurred  for -" + value + "Key" + oldKey + "Partition " + partitionNum + "-" + ex.getMessage());
+            log.error("Exception occurred  for -" + schedulerData.getKey() + "Key" + oldKey + "Partition " + partitionNum + "-" + ex.getMessage());
             throw new SchedulerException(ex, ErrorCode.DATASTORE_READWRITE_ERROR);
         } finally {
             if ((jedis != null))
@@ -88,6 +90,7 @@ public class RedisSchedulerStore implements SchedulerStore {
             jedis = _getInstance(partitionNum);
             key = getKey(time, partitionNum);
             Long result = jedis.srem(key, value);
+            jedis.del(value);
             log.info("Removed value " + value + "From" + key);
             return result;
         } catch (Exception ex) {
@@ -100,8 +103,9 @@ public class RedisSchedulerStore implements SchedulerStore {
     }
 
     @Override
-    public List<String> get(long time, int partitionNum) throws SchedulerException {
+    public List<SchedulerData> get(long time, int partitionNum) throws SchedulerException {
         Jedis jedis = null;
+        List<SchedulerData> schedulerDataList = new ArrayList<>();
         Set<String> resultSet;
         String key = "";
         try {
@@ -109,6 +113,9 @@ public class RedisSchedulerStore implements SchedulerStore {
             key = getKey(time, partitionNum);
             resultSet = jedis.smembers(key);
             log.info("Get For " + key + "-" + resultSet);
+            for (String schedulerDataKey : resultSet) {
+                schedulerDataList.add(new SchedulerData(schedulerDataKey, jedis.get(schedulerDataKey)));
+            }
         } catch (Exception ex) {
             log.error("Exception occurred  for -" + "Key" + key + "Partition " + partitionNum + "-" + ex.getMessage());
             throw new SchedulerException(ex, ErrorCode.DATASTORE_READWRITE_ERROR);
@@ -116,20 +123,24 @@ public class RedisSchedulerStore implements SchedulerStore {
             if ((jedis != null))
                 jedis.close();
         }
-        return new ArrayList<String>(resultSet);
+        return schedulerDataList;
     }
 
 
     @Override
-    public List<String> getNextN(long time, int partitionNum, int n) throws SchedulerException {
+    public List<SchedulerData> getNextN(long time, int partitionNum, int n) throws SchedulerException {
         Jedis jedis = null;
         List<String> resultSet;
+        List<SchedulerData> schedulerDataList = new ArrayList<>();
         String key = "";
         try {
             jedis = _getInstance(partitionNum);
             key = getKey(time, partitionNum);
             resultSet = jedis.srandmember(key, n);
             log.info("Get For " + key + "-" + resultSet);
+            for (String schedulerDataKey : resultSet) {
+                schedulerDataList.add(new SchedulerData(schedulerDataKey, jedis.get(schedulerDataKey)));
+            }
         } catch (Exception ex) {
             log.error("Exception occurred  for -" + "Key" + key + "Partition " + partitionNum + "-" + ex.getMessage());
             throw new SchedulerException(ex, ErrorCode.DATASTORE_READWRITE_ERROR);
@@ -137,7 +148,7 @@ public class RedisSchedulerStore implements SchedulerStore {
             if ((jedis != null))
                 jedis.close();
         }
-        return new ArrayList<String>(resultSet);
+        return schedulerDataList;
     }
 
     @Override

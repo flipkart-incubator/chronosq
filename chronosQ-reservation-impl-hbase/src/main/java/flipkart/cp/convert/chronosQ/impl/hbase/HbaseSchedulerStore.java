@@ -1,5 +1,6 @@
 package flipkart.cp.convert.chronosQ.impl.hbase;
 
+import flipkart.cp.convert.chronosQ.core.SchedulerData;
 import flipkart.cp.convert.chronosQ.core.SchedulerStore;
 import flipkart.cp.convert.chronosQ.exceptions.ErrorCode;
 import flipkart.cp.convert.chronosQ.exceptions.SchedulerException;
@@ -14,6 +15,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 
 public class HbaseSchedulerStore implements SchedulerStore {
@@ -41,12 +43,18 @@ public class HbaseSchedulerStore implements SchedulerStore {
 
 
     @Override
-    public void add(String value, long time, int partitionNo) throws SchedulerException {
-        String rowKey = getRowKey(value, time, partitionNo);
+    public void add(SchedulerData value, long time, int partitionNo) throws SchedulerException {
+        String rowKey = getRowKey(value.getKey(), time, partitionNo);
         Table hTable = null;
         try {
             hTable = getHTable();
-            hTable.put(HbaseUtils.createPut(rowKey, columnFamily, dummyData));
+            if (value.getValue().isPresent()) {
+                hTable.put(HbaseUtils.createPut(rowKey, columnFamily, new HashMap<byte[], byte[]>() {{
+                    put(column, value.getValue().get().getBytes());
+                }}));
+            } else {
+                hTable.put(HbaseUtils.createPut(rowKey, columnFamily, dummyData));
+            }
         } catch (IOException e) {
             log.error("Exception occurred  for adding  -" + value + "Key" + time + "Partition " + partitionNo + "-" + e.fillInStackTrace());
             throw new SchedulerException(e, ErrorCode.DATASTORE_READWRITE_ERROR);
@@ -56,9 +64,9 @@ public class HbaseSchedulerStore implements SchedulerStore {
     }
 
     @Override
-    public Long update(String value, long oldTime, long newTime, int partitionNo) throws SchedulerException {
+    public Long update(SchedulerData value, long oldTime, long newTime, int partitionNo) throws SchedulerException {
         add(value, newTime, partitionNo);
-        return remove(value, oldTime, partitionNo);
+        return remove(value.getKey(), oldTime, partitionNo);
     }
 
     @Override
@@ -80,8 +88,8 @@ public class HbaseSchedulerStore implements SchedulerStore {
     }
 
     @Override
-    public List<String> get(long time, int partitionNum) throws SchedulerException {
-        List<String> entries = new ArrayList<String>();
+    public List<SchedulerData> get(long time, int partitionNum) throws SchedulerException {
+        List<String> entries = new ArrayList<>();
         String startRow = getRowKey(START_STRING, time, partitionNum);
         String stopRow = getRowKey(END_STRING, time, partitionNum);
         Scan scan = HbaseUtils.getScanner(startRow, stopRow, columnFamily);
@@ -105,11 +113,11 @@ public class HbaseSchedulerStore implements SchedulerStore {
                 resultScanner.close();
             releaseHTableInterface(hTable);
         }
-        return entries;
+        return entries.stream().map(e -> new SchedulerData(e, e)).collect(Collectors.toList());
     }
 
 
-    public List<String> getNextN(long time, int partitionNum, int n) throws SchedulerException {
+    public List<SchedulerData> getNextN(long time, int partitionNum, int n) throws SchedulerException {
         List<String> entries = new ArrayList<String>();
         String startRow = getRowKey(START_STRING, time, partitionNum);
         String stopRow = getRowKey(END_STRING, time, partitionNum);
@@ -133,7 +141,7 @@ public class HbaseSchedulerStore implements SchedulerStore {
                 resultScanner.close();
             releaseHTableInterface(hTable);
         }
-        return entries;
+        return entries.stream().map(e -> new SchedulerData(e, e)).collect(Collectors.toList());
     }
 
     public void removeBulk(long time, int partitionNum, List<String> values) throws SchedulerException {
@@ -155,7 +163,7 @@ public class HbaseSchedulerStore implements SchedulerStore {
 
 
     private Table getHTable() throws IOException {
-        return  hConnection.getTable(TableName.valueOf(tableName));
+        return hConnection.getTable(TableName.valueOf(tableName));
     }
 
     private void releaseHTableInterface(Table hTable) throws SchedulerException {
@@ -167,7 +175,7 @@ public class HbaseSchedulerStore implements SchedulerStore {
             throw new SchedulerException(e, ErrorCode.DATASTORE_READWRITE_ERROR);
         }
     }
-    
+
     /*
      * Helper Functions
      */
@@ -180,7 +188,7 @@ public class HbaseSchedulerStore implements SchedulerStore {
         String rowKey = new String(result.getRow());
         String[] token = rowKey.split(DELIMITER, 4);
         if (token.length == 4)
-            return token[3];
+            return new String(result.getValue(columnFamily, column));
         else {
             //For any invalid entry
             log.error("INVALID ENTRY : Exception occurred while reading row -" + rowKey);

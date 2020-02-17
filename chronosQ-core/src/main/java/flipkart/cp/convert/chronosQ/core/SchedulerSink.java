@@ -8,8 +8,8 @@ import java.util.concurrent.Future;
 
 public interface SchedulerSink {
 
-    Future<?> giveExpiredForProcessing(String value) throws SchedulerException;
+    Future<?> giveExpiredForProcessing(SchedulerData value) throws SchedulerException;
 
-    Future<?> giveExpiredListForProcessing(List<String> value) throws SchedulerException;
+    Future<?> giveExpiredListForProcessing(List<SchedulerData> value) throws SchedulerException;
 
 }

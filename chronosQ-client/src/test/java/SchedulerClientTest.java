@@ -127,7 +127,7 @@ public class SchedulerClientTest {
     private void verifyForCorrectFlow() throws SchedulerException {
         verify(partitioner).getPartition(null);
         verify(timeBucket).toBucket(timeValue);
-        verify(entry).getStringValue();
+        verify(entry).getKey();
         verifyZeroInteractions(entry);
         verifyZeroInteractions(partitioner);
         verifyZeroInteractions(timeBucket);
