@@ -5,10 +5,10 @@
     <parent>
         <artifactId>chronosQ</artifactId>
         <groupId>chronosQ</groupId>
-        <version>1.6</version>
+        <version>1.7</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <version>1.6.8-SNAPSHOT</version>
+    <version>1.7</version>
 
     <artifactId>chronosQ-reservation-impl-redis</artifactId>
     <dependencies>
@@ -16,7 +16,7 @@
         <dependency>
             <groupId>chronosQ</groupId>
             <artifactId>chronosQ-core</artifactId>
-            <version>1.6.8-SNAPSHOT</version>
+            <version>1.7</version>
         </dependency>
 
         <dependency>
