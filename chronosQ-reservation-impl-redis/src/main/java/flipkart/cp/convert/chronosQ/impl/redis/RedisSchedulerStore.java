@@ -109,7 +109,7 @@ public class RedisSchedulerStore implements SchedulerStore {
             key = getKey(time, partitionNum);
             resultSet = jedis.smembers(key);
             log.info("Get For " + key + "-" + resultSet);
-            schedulerDataList = getSchedulerPayloadValues(partitionNum, resultSet);
+            schedulerDataList = getSchedulerPayloadValues(partitionNum, Optional.ofNullable(resultSet).orElse(Collections.emptySet()));
         } catch (Exception ex) {
             log.error("Exception occurred  for -" + "Key" + key + "Partition " + partitionNum + "-" + ex.getMessage());
             throw new SchedulerException(ex, ErrorCode.DATASTORE_READWRITE_ERROR);
@@ -132,7 +132,7 @@ public class RedisSchedulerStore implements SchedulerStore {
             key = getKey(time, partitionNum);
             resultSet = jedis.srandmember(key, n);
             log.info("Get For " + key + "-" + resultSet);
-            schedulerDataList = getSchedulerPayloadValues(partitionNum, resultSet);
+            schedulerDataList = getSchedulerPayloadValues(partitionNum, Optional.ofNullable(resultSet).orElse(Collections.emptyList()));
         } catch (Exception ex) {
             log.error("Exception occurred  for -" + "Key" + key + "Partition " + partitionNum + "-" + ex.getMessage());
             throw new SchedulerException(ex, ErrorCode.DATASTORE_READWRITE_ERROR);
@@ -148,7 +148,8 @@ public class RedisSchedulerStore implements SchedulerStore {
         List<SchedulerData> schedulerDataList = new ArrayList<>();
         try {
             jedis = _getInstance(partitionNum);
-            List<String> schedulerValues = jedis.mget(resultSet.toArray(new String[resultSet.size()]));
+            List<String> schedulerValues = Optional.ofNullable(jedis.mget(resultSet.toArray(new String[resultSet.size()])))
+                    .orElse(Collections.emptyList());
             Iterator<String> keyIterator = resultSet.iterator();
             Iterator<String> valueIterator = schedulerValues.iterator();
             while (keyIterator.hasNext() && valueIterator.hasNext()) {
