@@ -11,10 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -49,9 +46,7 @@ public class HbaseSchedulerStore implements SchedulerStore {
         try {
             hTable = getHTable();
             if (value.getValue().isPresent()) {
-                hTable.put(HbaseUtils.createPut(rowKey, columnFamily, new HashMap<byte[], byte[]>() {{
-                    put(column, value.getValue().get().getBytes());
-                }}));
+                hTable.put(HbaseUtils.createPut(rowKey, columnFamily, Collections.singletonMap(column, value.getValue().get().getBytes())));
             } else {
                 hTable.put(HbaseUtils.createPut(rowKey, columnFamily, dummyData));
             }
@@ -89,7 +84,7 @@ public class HbaseSchedulerStore implements SchedulerStore {
 
     @Override
     public List<SchedulerData> get(long time, int partitionNum) throws SchedulerException {
-        List<String> entries = new ArrayList<>();
+        List<SchedulerData> entries = new ArrayList<>();
         String startRow = getRowKey(START_STRING, time, partitionNum);
         String stopRow = getRowKey(END_STRING, time, partitionNum);
         Scan scan = HbaseUtils.getScanner(startRow, stopRow, columnFamily);
@@ -100,7 +95,7 @@ public class HbaseSchedulerStore implements SchedulerStore {
             resultScanner = hTable.getScanner(scan);
             Result result = resultScanner.next();
             while (null != result) {
-                String value = getValue(result);
+                SchedulerData value = getValue(result);
                 if (null != value)
                     entries.add(value);
                 result = resultScanner.next();
@@ -113,12 +108,12 @@ public class HbaseSchedulerStore implements SchedulerStore {
                 resultScanner.close();
             releaseHTableInterface(hTable);
         }
-        return entries.stream().map(e -> new SchedulerData(e, e)).collect(Collectors.toList());
+        return entries;
     }
 
 
     public List<SchedulerData> getNextN(long time, int partitionNum, int n) throws SchedulerException {
-        List<String> entries = new ArrayList<String>();
+        List<SchedulerData> entries = new ArrayList<>();
         String startRow = getRowKey(START_STRING, time, partitionNum);
         String stopRow = getRowKey(END_STRING, time, partitionNum);
         Scan scan = HbaseUtils.getScanner(startRow, stopRow, columnFamily);
@@ -129,7 +124,7 @@ public class HbaseSchedulerStore implements SchedulerStore {
             resultScanner = hTable.getScanner(scan);
             Result[] results = resultScanner.next(n);
             for (Result result : results) {
-                String value = getValue(result);
+                SchedulerData value = getValue(result);
                 if (null != value)
                     entries.add(value);
             }
@@ -141,7 +136,7 @@ public class HbaseSchedulerStore implements SchedulerStore {
                 resultScanner.close();
             releaseHTableInterface(hTable);
         }
-        return entries.stream().map(e -> new SchedulerData(e, e)).collect(Collectors.toList());
+        return entries;
     }
 
     public void removeBulk(long time, int partitionNum, List<String> values) throws SchedulerException {
@@ -180,15 +175,15 @@ public class HbaseSchedulerStore implements SchedulerStore {
      * Helper Functions
      */
 
-    private String getRowKey(String value, long time, int partitionNo) {
-        return schedulerInstance + DELIMITER + partitionNo + DELIMITER + Long.toString(time) + DELIMITER + value;
+    private String getRowKey(String key, long time, int partitionNo) {
+        return schedulerInstance + DELIMITER + partitionNo + DELIMITER + Long.toString(time) + DELIMITER + key;
     }
 
-    private String getValue(Result result) throws SchedulerException {
+    private SchedulerData getValue(Result result) throws SchedulerException {
         String rowKey = new String(result.getRow());
         String[] token = rowKey.split(DELIMITER, 4);
         if (token.length == 4)
-            return new String(result.getValue(columnFamily, column));
+            return new SchedulerData(token[3], new String(result.getValue(columnFamily, column)));
         else {
             //For any invalid entry
             log.error("INVALID ENTRY : Exception occurred while reading row -" + rowKey);
