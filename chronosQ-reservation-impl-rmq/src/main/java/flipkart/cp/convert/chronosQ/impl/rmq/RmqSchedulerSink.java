@@ -40,7 +40,7 @@ public class RmqSchedulerSink implements SchedulerSink {
     public CompletableFuture<Void> giveExpiredForProcessing(SchedulerData value) throws SchedulerException {
         try {
             log.info("Got message to be published " + value);
-            channel.basicPublish(exchange, queueName, null, value.getValue().orElse("").getBytes());
+            channel.basicPublish(exchange, queueName, null, value.getValue().getBytes());
             log.info("Message published -" + value);
             return CompletableFuture.completedFuture(null);
         } catch (IOException ex) {

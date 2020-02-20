@@ -48,13 +48,9 @@ public class HbaseSchedulerStore implements SchedulerStore {
         Table hTable = null;
         try {
             hTable = getHTable();
-            if (value.getValue().isPresent()) {
-                hTable.put(HbaseUtils.createPut(rowKey, columnFamily, new HashMap<byte[], byte[]>() {{
-                    put(column, value.getValue().get().getBytes());
-                }}));
-            } else {
-                hTable.put(HbaseUtils.createPut(rowKey, columnFamily, dummyData));
-            }
+            hTable.put(HbaseUtils.createPut(rowKey, columnFamily, new HashMap<byte[], byte[]>() {{
+                put(column, value.getValue().getBytes());
+            }}));
         } catch (IOException e) {
             log.error("Exception occurred  for adding  -" + value + "Key" + time + "Partition " + partitionNo + "-" + e.fillInStackTrace());
             throw new SchedulerException(e, ErrorCode.DATASTORE_READWRITE_ERROR);

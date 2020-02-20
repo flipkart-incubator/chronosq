@@ -3,8 +3,6 @@ package flipkart.cp.convert.chronosQ.core;
 import com.google.common.base.Strings;
 import lombok.AllArgsConstructor;
 
-import java.util.Optional;
-
 @AllArgsConstructor
 public class SchedulerData {
     private final String key;
@@ -14,11 +12,11 @@ public class SchedulerData {
         return key;
     }
 
-    public Optional<String> getValue() {
+    public String getValue() {
         if (Strings.isNullOrEmpty(value)) {
-            return Optional.empty();
+            return key;
         }
-        return Optional.of(value);
+        return value;
     }
 
     public SchedulerData(String key) {
