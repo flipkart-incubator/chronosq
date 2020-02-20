@@ -9,9 +9,7 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.Pipeline;
 import redis.clients.util.Pool;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Slf4j
 public class RedisSchedulerStore implements SchedulerStore {
@@ -45,9 +43,7 @@ public class RedisSchedulerStore implements SchedulerStore {
             jedis = _getInstance(partitionNum);
             key = getKey(time, partitionNum);
             jedis.sadd(key, schedulerData.getKey());
-            if (schedulerData.getValue().isPresent()) {
-                jedis.set(schedulerData.getKey(), schedulerData.getValue().get());
-            }
+            jedis.set(schedulerData.getKey(), schedulerData.getValue());
             log.info("Added value " + schedulerData.getKey() + "To " + key);
         } catch (Exception ex) {
             log.error("Exception occurred  for -" + schedulerData.getKey() + "Key" + key + "Partition " + partitionNum + "-" + ex.getMessage());
@@ -105,7 +101,7 @@ public class RedisSchedulerStore implements SchedulerStore {
     @Override
     public List<SchedulerData> get(long time, int partitionNum) throws SchedulerException {
         Jedis jedis = null;
-        List<SchedulerData> schedulerDataList = new ArrayList<>();
+        List<SchedulerData> schedulerDataList;
         Set<String> resultSet;
         String key = "";
         try {
@@ -113,9 +109,7 @@ public class RedisSchedulerStore implements SchedulerStore {
             key = getKey(time, partitionNum);
             resultSet = jedis.smembers(key);
             log.info("Get For " + key + "-" + resultSet);
-            for (String schedulerDataKey : resultSet) {
-                schedulerDataList.add(new SchedulerData(schedulerDataKey, jedis.get(schedulerDataKey)));
-            }
+            schedulerDataList = getSchedulerPayloadValues(partitionNum, resultSet);
         } catch (Exception ex) {
             log.error("Exception occurred  for -" + "Key" + key + "Partition " + partitionNum + "-" + ex.getMessage());
             throw new SchedulerException(ex, ErrorCode.DATASTORE_READWRITE_ERROR);
@@ -131,18 +125,37 @@ public class RedisSchedulerStore implements SchedulerStore {
     public List<SchedulerData> getNextN(long time, int partitionNum, int n) throws SchedulerException {
         Jedis jedis = null;
         List<String> resultSet;
-        List<SchedulerData> schedulerDataList = new ArrayList<>();
+        List<SchedulerData> schedulerDataList;
         String key = "";
         try {
             jedis = _getInstance(partitionNum);
             key = getKey(time, partitionNum);
             resultSet = jedis.srandmember(key, n);
             log.info("Get For " + key + "-" + resultSet);
-            for (String schedulerDataKey : resultSet) {
-                schedulerDataList.add(new SchedulerData(schedulerDataKey, jedis.get(schedulerDataKey)));
-            }
+            schedulerDataList = getSchedulerPayloadValues(partitionNum, resultSet);
         } catch (Exception ex) {
             log.error("Exception occurred  for -" + "Key" + key + "Partition " + partitionNum + "-" + ex.getMessage());
+            throw new SchedulerException(ex, ErrorCode.DATASTORE_READWRITE_ERROR);
+        } finally {
+            if ((jedis != null))
+                jedis.close();
+        }
+        return schedulerDataList;
+    }
+
+    private List<SchedulerData> getSchedulerPayloadValues(int partitionNum, Collection<String> resultSet) throws SchedulerException {
+        Jedis jedis = null;
+        List<SchedulerData> schedulerDataList = new ArrayList<>();
+        try {
+            jedis = _getInstance(partitionNum);
+            List<String> schedulerValues = jedis.mget(resultSet.toArray(new String[resultSet.size()]));
+            Iterator<String> keyIterator = resultSet.iterator();
+            Iterator<String> valueIterator = schedulerValues.iterator();
+            while (keyIterator.hasNext() && valueIterator.hasNext()) {
+                schedulerDataList.add(new SchedulerData(keyIterator.next(), valueIterator.next()));
+            }
+        } catch (Exception ex) {
+            log.error("Exception occurred  for -" + "mget payload for Partition " + partitionNum + "-" + ex.getMessage());
             throw new SchedulerException(ex, ErrorCode.DATASTORE_READWRITE_ERROR);
         } finally {
             if ((jedis != null))

@@ -45,8 +45,8 @@ public class HbaseSchedulerStore implements SchedulerStore {
         Table hTable = null;
         try {
             hTable = getHTable();
-            if (value.getValue().isPresent()) {
-                hTable.put(HbaseUtils.createPut(rowKey, columnFamily, Collections.singletonMap(column, value.getValue().get().getBytes())));
+            if (!value.getValue().equals(value.getKey())) {
+                hTable.put(HbaseUtils.createPut(rowKey, columnFamily, Collections.singletonMap(column, value.getValue().getBytes())));
             } else {
                 hTable.put(HbaseUtils.createPut(rowKey, columnFamily, dummyData));
             }
@@ -70,10 +70,8 @@ public class HbaseSchedulerStore implements SchedulerStore {
         Table hTable = null;
         try {
             hTable = getHTable();
-            boolean deleted = hTable.checkAndDelete(Bytes.toBytes(rowKey), columnFamily, column, dummyData.get(column), new Delete(Bytes.toBytes(rowKey)));
-            if (deleted)
-                return 1L;
-            return 0L;
+            hTable.delete(new Delete(Bytes.toBytes(rowKey)));
+            return 1L;
         } catch (IOException e) {
             log.error("Exception occurred while  for removing -" + value + "Key" + time + "Partition " + partitionNo + "-" + e.fillInStackTrace());
             throw new SchedulerException(e, ErrorCode.DATASTORE_READWRITE_ERROR);

@@ -20,7 +20,7 @@ public class KafkaSchedulerSinkExample {
         KafkaSchedulerSink kafkaSchedulerSink = new KafkaSchedulerSink(props, "test_scheduler_002", new KafkaMessage() {
             @Override
             public ProducerRecord<byte[], byte[]> getKeyedMessage(String topic, SchedulerData value) {
-                return new ProducerRecord<byte[], byte[]>(topic, value.getKey().getBytes(), value.getValue().orElse("").getBytes());
+                return new ProducerRecord<byte[], byte[]>(topic, value.getKey().getBytes(), value.getValue().getBytes());
             }
         });
         List<SchedulerData> values = new ArrayList<>();
