@@ -154,12 +154,16 @@ public class RedisSchedulerStore implements SchedulerStore {
             return schedulerDataList;
         try {
             jedis = _getInstance(partitionNum);
-            String[] keys = resultSet.toArray(new String[resultSet.size()]);
+            //https://stackoverflow.com/questions/174093/toarraynew-myclass0-or-toarraynew-myclassmylist-size
+            String[] keys = resultSet.toArray(new String[0]);
             List<String> schedulerValues = jedis.mget(keys);
             Iterator<String> keyIterator = resultSet.iterator();
             Iterator<String> valueIterator = schedulerValues.iterator();
             while (keyIterator.hasNext() && valueIterator.hasNext()) {
-                schedulerDataList.add(new DefaultSchedulerEntry(keyIterator.next(), valueIterator.next()));
+                String key = keyIterator.next();
+                String value = valueIterator.next();
+                value = "nil".equalsIgnoreCase(value) ? key : value;
+                schedulerDataList.add(new DefaultSchedulerEntry(key, value));
             }
         } catch (Exception ex) {
             log.error("Exception occurred  for -" + "mget payload for Partition " + partitionNum + "-" + ex.getMessage());
@@ -196,7 +200,7 @@ public class RedisSchedulerStore implements SchedulerStore {
         return prefix + convertNumToString(time) + DELIMITER + convertNumToString(partitionNum);
     }
 
-    private String getPayloadKey(String rawKey){
+    private String getPayloadKey(String rawKey) {
         String prefix = keyPrefix != null && !keyPrefix.equals("") ? keyPrefix + DELIMITER : "";
         return prefix + rawKey;
     }
