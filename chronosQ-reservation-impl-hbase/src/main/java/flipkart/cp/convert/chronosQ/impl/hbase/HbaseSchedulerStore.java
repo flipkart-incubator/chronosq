@@ -180,9 +180,13 @@ public class HbaseSchedulerStore implements SchedulerStore {
     private SchedulerEntry getValue(Result result) throws SchedulerException {
         String rowKey = new String(result.getRow());
         String[] token = rowKey.split(DELIMITER, 4);
-        if (token.length == 4)
-            return new DefaultSchedulerEntry(token[3], new String(result.getValue(columnFamily, column)));
-        else {
+        if (token.length == 4) {
+            byte[] payload = result.getValue(columnFamily, column);
+            if (Bytes.toBytes(true).equals(payload))
+                return new DefaultSchedulerEntry(token[3]);
+            else
+                return new DefaultSchedulerEntry(token[3], new String(payload));
+        } else {
             //For any invalid entry
             log.error("INVALID ENTRY : Exception occurred while reading row -" + rowKey);
             Table hTable = null;
