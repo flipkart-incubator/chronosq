@@ -45,7 +45,7 @@ public class SchedulerClient<Entry extends SchedulerEntry> {
             context = addTimeTaken.time();
         }
         try {
-            store.add(new DefaultSchedulerEntry(val, schedulerEntry.getPayload()), timeBucket.toBucket(time), partitionNumber);
+            store.add(schedulerEntry, timeBucket.toBucket(time), partitionNumber);
             log.info("Add :" + val + "-" + time);
         } catch (Exception ex) {
             log.error("Unable to add to scheduler  :" + val + "-" + time + ex.fillInStackTrace());
@@ -67,7 +67,7 @@ public class SchedulerClient<Entry extends SchedulerEntry> {
             context = updateTimeTaken.time();
         }
         try {
-            Long storeResult = store.update(new DefaultSchedulerEntry(val, schedulerEntry.getPayload()), timeBucket.toBucket(oldTime), timeBucket.toBucket(newTime), partitionNumber);
+            Long storeResult = store.update(schedulerEntry, timeBucket.toBucket(oldTime), timeBucket.toBucket(newTime), partitionNumber);
             if (storeResult != DATASTORE_NO_OPERATION)
                 result = true;
             log.info("Updated :" + val + "-" + "From " + oldTime + " To" + newTime);
