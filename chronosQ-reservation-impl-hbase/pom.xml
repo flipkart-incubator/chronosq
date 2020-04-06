@@ -6,12 +6,12 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>chronosQ-reservation-impl-hbase</artifactId>
-    <version>2.0.1</version>
+    <version>${package.version}</version>
     <dependencies>
         <dependency>
             <groupId>chronosQ</groupId>
             <artifactId>chronosQ-core</artifactId>
-            <version>2.0.1</version>
+            <version>${package.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.hbase</groupId>

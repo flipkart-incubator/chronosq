@@ -8,7 +8,7 @@
         <version>2.0.1</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <version>2.0.1</version>
+    <version>${package.version}</version>
 
     <artifactId>chronosQ-worker-container</artifactId>
     <dependencies>
@@ -16,18 +16,18 @@
         <dependency>
             <groupId>chronosQ</groupId>
             <artifactId>ha-worker</artifactId>
-            <version>2.0.1</version>
+            <version>${package.version}</version>
         </dependency>
 
         <dependency>
             <groupId>chronosQ</groupId>
             <artifactId>chronosQ-reservation-impl-redis</artifactId>
-            <version>2.0.1</version>
+            <version>${package.version}</version>
         </dependency>
         <dependency>
             <groupId>chronosQ</groupId>
             <artifactId>chronosQ-reservation-impl-rmq</artifactId>
-            <version>2.0.1</version>
+            <version>${package.version}</version>
         </dependency>
 
         <dependency>
@@ -38,7 +38,7 @@
         <dependency>
             <groupId>chronosQ</groupId>
             <artifactId>ha-worker</artifactId>
-            <version>2.0.1</version>
+            <version>${package.version}</version>
             <scope>compile</scope>
         </dependency>
 

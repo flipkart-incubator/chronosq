@@ -11,7 +11,7 @@
         <version>2.0.1</version>
     </parent>
     
-    <version>2.0.1</version>
+    <version>${package.version}</version>
     <modelVersion>4.0.0</modelVersion>
 
     <dependencies>

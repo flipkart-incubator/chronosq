@@ -7,8 +7,12 @@
     <groupId>chronosQ</groupId>
     <artifactId>chronosQ</artifactId>
     <version>2.0.1</version>
-
     <packaging>pom</packaging>
+
+    <properties>
+            <package.version>2.0.1</package.version>
+    </properties>
+
     <modules>
         <module>chronosQ-core</module>
         <module>chronosQ-client</module>
