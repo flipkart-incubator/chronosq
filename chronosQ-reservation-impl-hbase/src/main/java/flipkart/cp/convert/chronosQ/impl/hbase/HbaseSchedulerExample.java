@@ -1,6 +1,7 @@
 package flipkart.cp.convert.chronosQ.impl.hbase;
 
-import flipkart.cp.convert.chronosQ.core.SchedulerData;
+import flipkart.cp.convert.chronosQ.core.DefaultSchedulerEntry;
+import flipkart.cp.convert.chronosQ.core.SchedulerEntry;
 import flipkart.cp.convert.chronosQ.exceptions.SchedulerException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
@@ -39,31 +40,31 @@ public class HbaseSchedulerExample {
 
         //Scheduler Store
         HbaseSchedulerStore hbaseSchedulerStore = new HbaseSchedulerStore(hConnection, "connekt-scheduled-requests", "d", instanceName);
-        hbaseSchedulerStore.add(new SchedulerData("entry1"), time, 1);
+        hbaseSchedulerStore.add(new DefaultSchedulerEntry("entry1"), time, 1);
         hbaseSchedulerStore.remove("entry1", time, 1);
 
-        hbaseSchedulerStore.add(new SchedulerData("entry2"), time, 2);
-        hbaseSchedulerStore.add(new SchedulerData("entry3"), time, 2);
-        hbaseSchedulerStore.add(new SchedulerData("entry4"), time, 2);
+        hbaseSchedulerStore.add(new DefaultSchedulerEntry("entry2"), time, 2);
+        hbaseSchedulerStore.add(new DefaultSchedulerEntry("entry3"), time, 2);
+        hbaseSchedulerStore.add(new DefaultSchedulerEntry("entry4"), time, 2);
 
-        List<SchedulerData> entries = hbaseSchedulerStore.get(time, 2);
+        List<SchedulerEntry> entries = hbaseSchedulerStore.get(time, 2);
         assert (entries.size() > 0) : String.format("No added entries found in scheduler store time - %d partition - %d", time, 2);
-        for (SchedulerData entry : entries)
+        for (SchedulerEntry entry : entries)
             System.out.println("GET Response: " + entry);
 
         entries = hbaseSchedulerStore.getNextN(time, 2, 2);
         assert (entries.size() > 0) : String.format("No added entries found in scheduler store time - %d partition - %d", time, 2);
-        for (SchedulerData entry : entries)
+        for (SchedulerEntry entry : entries)
             System.out.println("GET Next 2 Response: " + entry);
 
-        hbaseSchedulerStore.removeBulk(time, 2, entries.stream().map(SchedulerData::getKey).collect(Collectors.toList()));
+        hbaseSchedulerStore.removeBulk(time, 2, entries.stream().map(SchedulerEntry::getKey).collect(Collectors.toList()));
         entries = hbaseSchedulerStore.getNextN(time, 2, 2);
         System.out.println("GET Next 2 Response size after deleting 2: " + entries.size());
-        hbaseSchedulerStore.removeBulk(time, 2, entries.stream().map(SchedulerData::getKey).collect(Collectors.toList()));
+        hbaseSchedulerStore.removeBulk(time, 2, entries.stream().map(SchedulerEntry::getKey).collect(Collectors.toList()));
 
         entries = hbaseSchedulerStore.getNextN(time, 2, 2);
         System.out.println("GET Next 2 Response size after deleting all: " + entries.size());
-        hbaseSchedulerStore.removeBulk(time, 2, entries.stream().map(SchedulerData::getKey).collect(Collectors.toList()));
+        hbaseSchedulerStore.removeBulk(time, 2, entries.stream().map(SchedulerEntry::getKey).collect(Collectors.toList()));
 
         //scheduler check-pointer
         HbaseSchedulerCheckpoint hbaseSchedulerCheckpoint = new HbaseSchedulerCheckpoint(hConnection, "connekt-schedule-checkpoints", "d", instanceName);

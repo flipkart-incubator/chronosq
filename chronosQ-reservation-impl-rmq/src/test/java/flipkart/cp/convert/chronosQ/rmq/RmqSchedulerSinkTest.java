@@ -1,7 +1,8 @@
 package flipkart.cp.convert.chronosQ.rmq;
 
 import com.rabbitmq.client.Channel;
-import flipkart.cp.convert.chronosQ.core.SchedulerData;
+import flipkart.cp.convert.chronosQ.core.DefaultSchedulerEntry;
+import flipkart.cp.convert.chronosQ.core.SchedulerEntry;
 import flipkart.cp.convert.chronosQ.core.SchedulerSink;
 import flipkart.cp.convert.chronosQ.exceptions.SchedulerException;
 import flipkart.cp.convert.chronosQ.impl.rmq.RmqSchedulerSink;
@@ -51,8 +52,8 @@ public class RmqSchedulerSinkTest {
 
     @Test
     public void testGiveForProcessingList() throws Exception {
-        List<SchedulerData> values = new ArrayList<SchedulerData>(1);
-        values.add(new SchedulerData(value));
+        List<SchedulerEntry> values = new ArrayList<SchedulerEntry>(1);
+        values.add(new DefaultSchedulerEntry(value));
         doNothing().when(channel).basicPublish(exchangeName, routingKeyName, null, value.getBytes());
         schedulerSink.giveExpiredListForProcessing(values);
         verify(channel).basicPublish(exchangeName, routingKeyName, null, value.getBytes());
@@ -60,7 +61,7 @@ public class RmqSchedulerSinkTest {
     }
 
     private void checkChannelForProcessing() throws Exception {
-        schedulerSink.giveExpiredForProcessing(new SchedulerData(value));
+        schedulerSink.giveExpiredForProcessing(new DefaultSchedulerEntry(value));
         verify(channel).basicPublish(exchangeName, routingKeyName, null, value.getBytes());
         verifyZeroInteractions(channel);
     }

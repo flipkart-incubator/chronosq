@@ -39,7 +39,7 @@ public class WorkerTaskImplTest {
     private final int batchSize = 10;
     private String timerKeyValue = String.valueOf(new Date().getTime() - 10000);
     private long longValue = Long.valueOf(timerKeyValue);
-    List<SchedulerData> values = null;
+    List<SchedulerEntry> values = null;
 
     @Before
     public void setUp() throws SchedulerException, InterruptedException {
@@ -50,7 +50,7 @@ public class WorkerTaskImplTest {
         when(timeBucket.toBucket(longValue)).thenReturn(longValue);
         when(schedulerStore.get(longValue, partitionNum)).thenReturn(null);
         doNothing().when(schedulerSink).giveExpiredListForProcessing(values);
-        doNothing().when(schedulerStore).removeBulk(longValue, partitionNum, values.stream().map(SchedulerData::getKey).collect(Collectors.toList()));
+        doNothing().when(schedulerStore).removeBulk(longValue, partitionNum, values.stream().map(SchedulerEntry::getKey).collect(Collectors.toList()));
         doThrow(new SchedulerException("", ErrorCode.DATASTORE_READWRITE_ERROR)).when(checkpointer).set(timerKeyValue, partitionNum);
     }
 
@@ -61,7 +61,7 @@ public class WorkerTaskImplTest {
         verify(timeBucket).toBucket(longValue);
         verify(schedulerStore).get(longValue, partitionNum);
         verify(schedulerSink).giveExpiredListForProcessing(values);
-        verify(schedulerStore).removeBulk(longValue, partitionNum, values.stream().map(SchedulerData::getKey).collect(Collectors.toList()));
+        verify(schedulerStore).removeBulk(longValue, partitionNum, values.stream().map(SchedulerEntry::getKey).collect(Collectors.toList()));
         verify(checkpointer).set(timerKeyValue, partitionNum);
         verifyZeroInteractions(checkpointer);
         verifyZeroInteractions(timeBucket);

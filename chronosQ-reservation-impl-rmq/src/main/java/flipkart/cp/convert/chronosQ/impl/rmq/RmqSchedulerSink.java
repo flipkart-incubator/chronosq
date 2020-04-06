@@ -2,7 +2,7 @@ package flipkart.cp.convert.chronosQ.impl.rmq;
 
 import com.rabbitmq.client.AMQP.BasicProperties;
 import com.rabbitmq.client.Channel;
-import flipkart.cp.convert.chronosQ.core.SchedulerData;
+import flipkart.cp.convert.chronosQ.core.SchedulerEntry;
 import flipkart.cp.convert.chronosQ.core.SchedulerSink;
 import flipkart.cp.convert.chronosQ.exceptions.ErrorCode;
 import flipkart.cp.convert.chronosQ.exceptions.SchedulerException;
@@ -37,10 +37,10 @@ public class RmqSchedulerSink implements SchedulerSink {
     }
 
     @Override
-    public CompletableFuture<Void> giveExpiredForProcessing(SchedulerData value) throws SchedulerException {
+    public CompletableFuture<Void> giveExpiredForProcessing(SchedulerEntry value) throws SchedulerException {
         try {
             log.info("Got message to be published " + value);
-            channel.basicPublish(exchange, queueName, null, value.getValue().getBytes());
+            channel.basicPublish(exchange, queueName, null, value.getPayload().getBytes());
             log.info("Message published -" + value);
             return CompletableFuture.completedFuture(null);
         } catch (IOException ex) {
@@ -50,8 +50,8 @@ public class RmqSchedulerSink implements SchedulerSink {
     }
 
     @Override
-    public CompletableFuture<Void> giveExpiredListForProcessing(List<SchedulerData> values) throws SchedulerException {
-        for (SchedulerData value : values)
+    public CompletableFuture<Void> giveExpiredListForProcessing(List<SchedulerEntry> values) throws SchedulerException {
+        for (SchedulerEntry value : values)
             giveExpiredForProcessing(value);
         return CompletableFuture.completedFuture(null);
     }

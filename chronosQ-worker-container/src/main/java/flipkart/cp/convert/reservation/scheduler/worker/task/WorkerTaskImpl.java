@@ -69,13 +69,13 @@ public class WorkerTaskImpl extends WorkerTask {
                 long currentDateTimeInMilliSec = getCurrentDateTimeInMilliSecs();
                 long nextIntervalForProcess = calculateNextIntervalForProcess(getPartitionNum());
                 while (!interrupt && nextIntervalForProcess <= currentDateTimeInMilliSec) {
-                    List<SchedulerData> values = schedulerStore.getNextN(nextIntervalForProcess, getPartitionNum(), batchSize);
+                    List<SchedulerEntry> values = schedulerStore.getNextN(nextIntervalForProcess, getPartitionNum(), batchSize);
 
                     while (!interrupt && !values.isEmpty()) {
                         final Timer.Context context = sinkPushingTime.time();
                         schedulerSink.giveExpiredListForProcessing(values);
                         context.stop();
-                        schedulerStore.removeBulk(nextIntervalForProcess, getPartitionNum(), values.stream().map(SchedulerData::getKey).collect(Collectors.toList()));
+                        schedulerStore.removeBulk(nextIntervalForProcess, getPartitionNum(), values.stream().map(SchedulerEntry::getKey).collect(Collectors.toList()));
                         values = schedulerStore.getNextN(nextIntervalForProcess, getPartitionNum(), batchSize);
                     }
                     checkpointer.set(String.valueOf(nextIntervalForProcess), getPartitionNum());

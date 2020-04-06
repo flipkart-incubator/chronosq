@@ -1,7 +1,7 @@
 package flipkart.cp.convert.chronosQ.impl.kafka;
 
 
-import flipkart.cp.convert.chronosQ.core.SchedulerData;
+import flipkart.cp.convert.chronosQ.core.SchedulerEntry;
 import flipkart.cp.convert.chronosQ.core.SchedulerSink;
 import flipkart.cp.convert.chronosQ.exceptions.ErrorCode;
 import flipkart.cp.convert.chronosQ.exceptions.SchedulerException;
@@ -33,7 +33,7 @@ public class KafkaSchedulerSink implements SchedulerSink {
     }
 
     @Override
-    public CompletableFuture<RecordMetadata> giveExpiredForProcessing(SchedulerData value) throws SchedulerException {
+    public CompletableFuture<RecordMetadata> giveExpiredForProcessing(SchedulerEntry value) throws SchedulerException {
         CompletableFuture<RecordMetadata> completableFuture = new CompletableFuture<>();
         if (null != value) {
             try {
@@ -55,9 +55,9 @@ public class KafkaSchedulerSink implements SchedulerSink {
     }
 
     @Override
-    public Future<List<RecordMetadata>> giveExpiredListForProcessing(List<SchedulerData> storeEntries) throws SchedulerException {
+    public Future<List<RecordMetadata>> giveExpiredListForProcessing(List<SchedulerEntry> storeEntries) throws SchedulerException {
         List<ProducerRecord<byte[], byte[]>> data = new ArrayList<>();
-        for (SchedulerData storeValue : storeEntries) {
+        for (SchedulerEntry storeValue : storeEntries) {
             if (null != storeValue) {
                 data.add(kafkaMessage.getKeyedMessage(topic, storeValue));
             }

@@ -1,6 +1,7 @@
 package flipkart.cp.convert.chronosQ.redis;
 
-import flipkart.cp.convert.chronosQ.core.SchedulerData;
+import flipkart.cp.convert.chronosQ.core.DefaultSchedulerEntry;
+import flipkart.cp.convert.chronosQ.core.SchedulerEntry;
 import flipkart.cp.convert.chronosQ.core.SchedulerStore;
 import flipkart.cp.convert.chronosQ.exceptions.SchedulerException;
 import flipkart.cp.convert.chronosQ.impl.redis.RedisParitioner;
@@ -53,20 +54,20 @@ public class RedisSchedulerStoreTest {
 
     @Test
     public void addToDataStore() throws SchedulerException {
-        redisSchedulerStore.add(new SchedulerData(value), firstKey, partitionNum);
+        redisSchedulerStore.add(new DefaultSchedulerEntry(value), firstKey, partitionNum);
         checkRedisPartitionerFlow();
     }
 
     @Test(expected = SchedulerException.class)
     public void notAddToDataStore() throws SchedulerException {
         returnNullRedis();
-        redisSchedulerStore.add(new SchedulerData(value), firstKey, partitionNum);
+        redisSchedulerStore.add(new DefaultSchedulerEntry(value), firstKey, partitionNum);
         checkRedisPartitionerFlow();
     }
 
     @Test
     public void updateDataStore() throws SchedulerException {
-        Long result = redisSchedulerStore.update(new SchedulerData(value), firstKey, secondKey, partitionNum);
+        Long result = redisSchedulerStore.update(new DefaultSchedulerEntry(value), firstKey, secondKey, partitionNum);
         assertTrue(result == dataStoreReturnValue);
         checkRedisPartitionerFlow();
     }
@@ -74,14 +75,14 @@ public class RedisSchedulerStoreTest {
     @Test(expected = SchedulerException.class)
     public void notUpdateDataStore() throws SchedulerException {
         returnNullRedis();
-        Long result = redisSchedulerStore.update(new SchedulerData(value), secondKey, firstKey, 1);
+        Long result = redisSchedulerStore.update(new DefaultSchedulerEntry(value), secondKey, firstKey, 1);
         assertFalse(result == dataStoreReturnValue);
         checkRedisPartitionerFlow();
     }
 
     @Test
     public void getOldKeyFromDataStore() throws SchedulerException {
-        List<SchedulerData> value = redisSchedulerStore.get(firstKey, partitionNum);
+        List<SchedulerEntry> value = redisSchedulerStore.get(firstKey, partitionNum);
         assertEquals(0, value.size());
         checkRedisPartitionerFlow();
     }
@@ -103,10 +104,10 @@ public class RedisSchedulerStoreTest {
 
     @Test
     public void addTestKey() throws SchedulerException {
-        redisSchedulerStore.add(new SchedulerData(value), removalKey, partitionNum);
-        redisSchedulerStore.add(new SchedulerData(value + "x"), secondKey, partitionNum);
-        redisSchedulerStore.add(new SchedulerData(value + "y"), secondKey, partitionNum);
-        redisSchedulerStore.add(new SchedulerData(value + "z"), secondKey, partitionNum);
+        redisSchedulerStore.add(new DefaultSchedulerEntry(value), removalKey, partitionNum);
+        redisSchedulerStore.add(new DefaultSchedulerEntry(value + "x"), secondKey, partitionNum);
+        redisSchedulerStore.add(new DefaultSchedulerEntry(value + "y"), secondKey, partitionNum);
+        redisSchedulerStore.add(new DefaultSchedulerEntry(value + "z"), secondKey, partitionNum);
     }
 
     @Test
