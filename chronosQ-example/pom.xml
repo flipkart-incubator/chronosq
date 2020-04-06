@@ -7,6 +7,11 @@
         <groupId>chronosQ</groupId>
         <version>2.0.1</version>
     </parent>
+
+    <properties>
+        <package.version>2.0.1</package.version>
+    </properties>
+
     <modelVersion>4.0.0</modelVersion>
     <version>${package.version}</version>
 

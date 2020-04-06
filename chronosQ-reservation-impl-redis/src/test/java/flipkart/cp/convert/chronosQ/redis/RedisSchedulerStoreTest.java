@@ -47,7 +47,7 @@ public class RedisSchedulerStoreTest {
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
-        redisSchedulerStore = new RedisSchedulerStore(redisParitioner);
+        redisSchedulerStore = new RedisSchedulerStore(redisParitioner, "testCase");
         jedisPool = new JedisPool("localhost", 6379);
         when(redisParitioner.getJedis(partitionNum)).thenReturn(jedisPool);
     }
@@ -55,21 +55,21 @@ public class RedisSchedulerStoreTest {
     @Test
     public void addToDataStore() throws SchedulerException {
         redisSchedulerStore.add(new DefaultSchedulerEntry(value), firstKey, partitionNum);
-        checkRedisPartitionerFlow();
+        checkRedisPartitionerFlow(1);
     }
 
     @Test(expected = SchedulerException.class)
     public void notAddToDataStore() throws SchedulerException {
         returnNullRedis();
         redisSchedulerStore.add(new DefaultSchedulerEntry(value), firstKey, partitionNum);
-        checkRedisPartitionerFlow();
+        checkRedisPartitionerFlow(1);
     }
 
     @Test
     public void updateDataStore() throws SchedulerException {
         Long result = redisSchedulerStore.update(new DefaultSchedulerEntry(value), firstKey, secondKey, partitionNum);
         assertTrue(result == dataStoreReturnValue);
-        checkRedisPartitionerFlow();
+        checkRedisPartitionerFlow(1);
     }
 
     @Test(expected = SchedulerException.class)
@@ -77,14 +77,14 @@ public class RedisSchedulerStoreTest {
         returnNullRedis();
         Long result = redisSchedulerStore.update(new DefaultSchedulerEntry(value), secondKey, firstKey, 1);
         assertFalse(result == dataStoreReturnValue);
-        checkRedisPartitionerFlow();
+        checkRedisPartitionerFlow(1);
     }
 
     @Test
     public void getOldKeyFromDataStore() throws SchedulerException {
         List<SchedulerEntry> value = redisSchedulerStore.get(firstKey, partitionNum);
         assertEquals(0, value.size());
-        checkRedisPartitionerFlow();
+        checkRedisPartitionerFlow(1);
     }
 
 
@@ -93,13 +93,13 @@ public class RedisSchedulerStoreTest {
         returnNullRedis();
         Long result = redisSchedulerStore.remove(value, firstKey, partitionNum);
         assertTrue(result == dataStoreCheckValue);
-        checkRedisPartitionerFlow();
+        checkRedisPartitionerFlow(1);
     }
 
     @Test
     public void keyNotFound() throws SchedulerException {
         redisSchedulerStore.remove(value, newKey, partitionNum);
-        checkRedisPartitionerFlow();
+        checkRedisPartitionerFlow(1);
     }
 
     @Test
@@ -114,14 +114,14 @@ public class RedisSchedulerStoreTest {
     public void removeFromDataStore() throws SchedulerException {
         Long result = redisSchedulerStore.remove(value, removalKey, partitionNum);
         assertTrue(result == dataStoreReturnValue);
-        checkRedisPartitionerFlow();
+        checkRedisPartitionerFlow(1);
     }
 
     @Test
     public void getNFromSet() throws SchedulerException {
         int result = redisSchedulerStore.getNextN(secondKey, partitionNum, n).size();
         assertTrue(result == n);
-        checkRedisPartitionerFlow();
+        checkRedisPartitionerFlow(2);
     }
 
     @Test
@@ -130,12 +130,12 @@ public class RedisSchedulerStoreTest {
         values.add(value + "x");
         values.add(value + "y");
         redisSchedulerStore.removeBulk(secondKey, partitionNum, values);
-        checkRedisPartitionerFlow();
+        checkRedisPartitionerFlow(1);
 
     }
 
-    private void checkRedisPartitionerFlow() {
-        verify(redisParitioner, times(2)).getJedis(partitionNum);
+    private void checkRedisPartitionerFlow(int wantedinvocations) {
+        verify(redisParitioner, times(wantedinvocations)).getJedis(partitionNum);
         verifyZeroInteractions(redisParitioner);
     }
 

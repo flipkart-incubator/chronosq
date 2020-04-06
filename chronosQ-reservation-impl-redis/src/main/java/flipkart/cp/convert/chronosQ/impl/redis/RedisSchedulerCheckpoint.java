@@ -31,10 +31,11 @@ public class RedisSchedulerCheckpoint implements SchedulerCheckpointer {
             return value;
         } catch (Exception ex) {
             log.error("Exception occurred for " + key + ex.getMessage());
+            pool.returnBrokenResource(jedis);
+            jedis = null;
             throw new SchedulerException(ex, ErrorCode.DATASTORE_CHECKPOINT_ERROR);
         } finally {
-            if (jedis != null)
-                jedis.close();
+            pool.returnResource(jedis);
         }
     }
 
@@ -52,10 +53,11 @@ public class RedisSchedulerCheckpoint implements SchedulerCheckpointer {
             log.info("Setting value to key " + key + " to-" + value);
         } catch (Exception ex) {
             log.error("Exception occurred for " + key + "-" + value + ex.getMessage());
+            pool.returnBrokenResource(jedis);
+            jedis = null;
             throw new SchedulerException(ex, ErrorCode.DATASTORE_CHECKPOINT_ERROR);
         } finally {
-            if (jedis != null)
-                jedis.close();
+            pool.returnResource(jedis);
         }
     }
 

@@ -24,7 +24,7 @@ public class Example {
         JedisPoolConfig config = new JedisPoolConfig();
         config.setMaxTotal(10);
         JedisPool jedisPool = new JedisPool(config, "localhost", 6379);
-        SchedulerEntry schedulerEntry = new ExampleSchedulerEntry("BaraniTest", "BaraniTest");
+        SchedulerEntry schedulerEntry = new ExampleSchedulerEntry("BaraniTest", "BaraniTest-ExampleValue");
         long timeInMilliSecs = new Date().getTime();
         Partitioner partitioner = new RandomPartitioner(1);
         ArrayList<Pool<Jedis>> jedisPoolList = new ArrayList<Pool<Jedis>>();
@@ -35,7 +35,5 @@ public class Example {
         MetricRegistry metricRegistry = new MetricRegistry();
         SchedulerClient schedulerClient = new SchedulerClient(redisSchedulerStore, subMinuteTimeBucket, partitioner, metricRegistry);
         schedulerClient.add(schedulerEntry, timeInMilliSecs);
-
     }
-
 }
