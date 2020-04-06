@@ -8,7 +8,7 @@ import flipkart.cp.convert.chronosQ.exceptions.SchedulerException;
 import lombok.extern.slf4j.Slf4j;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.Pipeline;
-import redis.clients.util.Pool;
+import redis.clients.jedis.util.Pool;
 
 import java.util.*;
 import java.util.stream.Collectors;

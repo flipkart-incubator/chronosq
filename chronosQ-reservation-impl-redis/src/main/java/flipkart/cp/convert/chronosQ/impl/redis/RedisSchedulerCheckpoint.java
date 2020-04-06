@@ -6,7 +6,7 @@ import flipkart.cp.convert.chronosQ.exceptions.SchedulerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
-import redis.clients.util.Pool;
+import redis.clients.jedis.util.Pool;
 
 
 public class RedisSchedulerCheckpoint implements SchedulerCheckpointer {
@@ -31,11 +31,10 @@ public class RedisSchedulerCheckpoint implements SchedulerCheckpointer {
             return value;
         } catch (Exception ex) {
             log.error("Exception occurred for " + key + ex.getMessage());
-            pool.returnBrokenResource(jedis);
-            jedis = null;
             throw new SchedulerException(ex, ErrorCode.DATASTORE_CHECKPOINT_ERROR);
         } finally {
-            pool.returnResource(jedis);
+            if (jedis != null)
+                jedis.close();
         }
     }
 
@@ -53,11 +52,10 @@ public class RedisSchedulerCheckpoint implements SchedulerCheckpointer {
             log.info("Setting value to key " + key + " to-" + value);
         } catch (Exception ex) {
             log.error("Exception occurred for " + key + "-" + value + ex.getMessage());
-            pool.returnBrokenResource(jedis);
-            jedis = null;
             throw new SchedulerException(ex, ErrorCode.DATASTORE_CHECKPOINT_ERROR);
         } finally {
-            pool.returnResource(jedis);
+            if (jedis != null)
+                jedis.close();
         }
     }
 
