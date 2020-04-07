@@ -70,7 +70,6 @@ public class WorkerTaskImpl extends WorkerTask {
                 long nextIntervalForProcess = calculateNextIntervalForProcess(getPartitionNum());
                 while (!interrupt && nextIntervalForProcess <= currentDateTimeInMilliSec) {
                     List<SchedulerEntry> values = schedulerStore.getNextN(nextIntervalForProcess, getPartitionNum(), batchSize);
-
                     while (!interrupt && !values.isEmpty()) {
                         final Timer.Context context = sinkPushingTime.time();
                         schedulerSink.giveExpiredListForProcessing(values);
