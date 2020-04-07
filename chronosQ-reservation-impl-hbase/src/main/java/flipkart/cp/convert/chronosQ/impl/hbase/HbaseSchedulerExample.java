@@ -20,7 +20,7 @@ public class HbaseSchedulerExample {
     public static void main(String args[]) throws SchedulerException {
 
         Configuration hConfig = HBaseConfiguration.create();
-        hConfig.set(HConstants.ZOOKEEPER_QUORUM, "ce-sandbox-hbase-0001.nm.flipkart.com");
+        hConfig.set(HConstants.ZOOKEEPER_QUORUM, "localhost");
         hConfig.set(HConstants.ZOOKEEPER_CLIENT_PORT, "2181");
         hConfig.set(HConstants.HBASE_CLIENT_SCANNER_TIMEOUT_PERIOD, "60000");
         hConfig.set(HConstants.HBASE_RPC_TIMEOUT_KEY, "60000");
@@ -43,8 +43,8 @@ public class HbaseSchedulerExample {
         hbaseSchedulerStore.add(new DefaultSchedulerEntry("entry1"), time, 1);
         hbaseSchedulerStore.remove("entry1", time, 1);
 
-        hbaseSchedulerStore.add(new DefaultSchedulerEntry("entry2"), time, 2);
-        hbaseSchedulerStore.add(new DefaultSchedulerEntry("entry3"), time, 2);
+        hbaseSchedulerStore.add(new DefaultSchedulerEntry("entry2", "payload2"), time, 2);
+        hbaseSchedulerStore.add(new DefaultSchedulerEntry("entry3", "payload3"), time, 2);
         hbaseSchedulerStore.add(new DefaultSchedulerEntry("entry4"), time, 2);
 
         List<SchedulerEntry> entries = hbaseSchedulerStore.get(time, 2);

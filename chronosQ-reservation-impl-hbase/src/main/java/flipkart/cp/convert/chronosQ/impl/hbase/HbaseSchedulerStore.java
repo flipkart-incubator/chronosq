@@ -182,7 +182,7 @@ public class HbaseSchedulerStore implements SchedulerStore {
         String[] token = rowKey.split(DELIMITER, 4);
         if (token.length == 4) {
             byte[] payload = result.getValue(columnFamily, column);
-            if (Bytes.toBytes(true).equals(payload))
+            if (Arrays.equals(Bytes.toBytes(true), payload))
                 return new DefaultSchedulerEntry(token[3]);
             else
                 return new DefaultSchedulerEntry(token[3], new String(payload));

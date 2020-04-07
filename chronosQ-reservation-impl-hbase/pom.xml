@@ -7,6 +7,11 @@
     <modelVersion>4.0.0</modelVersion>
     <artifactId>chronosQ-reservation-impl-hbase</artifactId>
     <version>${package.version}</version>
+
+    <properties>
+        <hadoop.version>2.8.5</hadoop.version>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>chronosQ</groupId>
@@ -21,12 +26,17 @@
         <dependency>
             <groupId>org.apache.hbase</groupId>
             <artifactId>hbase-common</artifactId>
-            <version>1.1.2</version>
+            <version>1.2.12</version>
         </dependency>
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-common</artifactId>
-            <version>2.7.2</version>
+            <version>${hadoop.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-auth</artifactId>
+            <version>${hadoop.version}</version>
         </dependency>
     </dependencies>
 </project>
