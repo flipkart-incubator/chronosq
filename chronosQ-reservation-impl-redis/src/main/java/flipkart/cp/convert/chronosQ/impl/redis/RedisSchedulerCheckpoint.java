@@ -22,19 +22,14 @@ public class RedisSchedulerCheckpoint implements SchedulerCheckpointer {
 
     @Override
     public String peek(int partitionNum) throws SchedulerException {
-        Jedis jedis = null;
         String key = _key(timerKeyPrefix, partitionNum);
-        try {
-            jedis = pool.getResource();
+        try (Jedis jedis = pool.getResource()) {
             String value = jedis.get(key);
             log.info("Fetching value for key " + key + "is" + value);
             return value;
         } catch (Exception ex) {
             log.error("Exception occurred for " + key + ex.getMessage());
             throw new SchedulerException(ex, ErrorCode.DATASTORE_CHECKPOINT_ERROR);
-        } finally {
-            if (jedis != null)
-                jedis.close();
         }
     }
 
@@ -44,18 +39,13 @@ public class RedisSchedulerCheckpoint implements SchedulerCheckpointer {
 
     @Override
     public void set(String value, int partitionNum) throws SchedulerException {
-        Jedis jedis = null;
         String key = _key(timerKeyPrefix, partitionNum);
-        try {
-            jedis = pool.getResource();
+        try (Jedis jedis = pool.getResource()) {
             jedis.set(key, value);
             log.info("Setting value to key " + key + " to-" + value);
         } catch (Exception ex) {
             log.error("Exception occurred for " + key + "-" + value + ex.getMessage());
             throw new SchedulerException(ex, ErrorCode.DATASTORE_CHECKPOINT_ERROR);
-        } finally {
-            if (jedis != null)
-                jedis.close();
         }
     }
 
