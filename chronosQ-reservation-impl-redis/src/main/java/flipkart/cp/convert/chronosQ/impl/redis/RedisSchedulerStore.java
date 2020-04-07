@@ -133,8 +133,9 @@ public class RedisSchedulerStore implements SchedulerStore {
             Iterator<String> valueIterator = schedulerValues.iterator();
             while (keyIterator.hasNext() && valueIterator.hasNext()) {
                 String key = keyIterator.next();
-                String value = Optional.ofNullable(valueIterator.next()).orElse(key);
-                schedulerDataList.add(new DefaultSchedulerEntry(removePrefix(key), value));
+                String originalKey = removePrefix(key);
+                String value = Optional.ofNullable(valueIterator.next()).orElse(originalKey);
+                schedulerDataList.add(new DefaultSchedulerEntry(originalKey, value));
             }
         } catch (Exception ex) {
             log.error("Exception occurred  for -" + "mget payload for Partition " + partitionNum + "-" + ex.getMessage());
