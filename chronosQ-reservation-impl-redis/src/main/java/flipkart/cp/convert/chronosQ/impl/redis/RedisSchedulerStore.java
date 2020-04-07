@@ -161,8 +161,7 @@ public class RedisSchedulerStore implements SchedulerStore {
             Iterator<String> valueIterator = schedulerValues.iterator();
             while (keyIterator.hasNext() && valueIterator.hasNext()) {
                 String key = keyIterator.next();
-                String value = valueIterator.next();
-                value = "nil".equalsIgnoreCase(value) ? key : value;
+                String value = Optional.ofNullable(valueIterator.next()).orElse(key);
                 schedulerDataList.add(new DefaultSchedulerEntry(key, value));
             }
         } catch (Exception ex) {
