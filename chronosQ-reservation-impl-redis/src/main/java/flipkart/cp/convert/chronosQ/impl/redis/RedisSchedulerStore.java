@@ -38,32 +38,32 @@ public class RedisSchedulerStore implements SchedulerStore {
     }
 
     @Override
-    public void add(SchedulerEntry schedulerData, long time, int partitionNum) throws SchedulerException {
+    public void add(SchedulerEntry schedulerEntry, long time, int partitionNum) throws SchedulerException {
         String key = "";
         try (Jedis jedis = _getInstance(partitionNum)) {
             key = getKey(time, partitionNum);
-            jedis.sadd(key, schedulerData.getKey());
-            jedis.set(getPayloadKey(schedulerData.getKey()), schedulerData.getPayload());
-            log.info("Added value " + schedulerData.getKey() + "To " + key);
+            jedis.sadd(key, schedulerEntry.getKey());
+            jedis.set(getPayloadKey(schedulerEntry.getKey()), schedulerEntry.getPayload());
+            log.info("Added value " + schedulerEntry.getKey() + "To " + key);
         } catch (Exception ex) {
-            log.error("Exception occurred  for -" + schedulerData.getKey() + "Key" + key + "Partition " + partitionNum + "-" + ex.getMessage());
+            log.error("Exception occurred  for -" + schedulerEntry.getKey() + "Key" + key + "Partition " + partitionNum + "-" + ex.getMessage());
             throw new SchedulerException(ex, ErrorCode.DATASTORE_READWRITE_ERROR);
         }
     }
 
     @Override
-    public Long update(SchedulerEntry schedulerData, long oldTime, long newTime, int partitionNum) throws SchedulerException {
+    public Long update(SchedulerEntry schedulerEntry, long oldTime, long newTime, int partitionNum) throws SchedulerException {
         Long result;
         String oldKey = "";
         String newKey = "";
         try (Jedis jedis = _getInstance(partitionNum)) {
             oldKey = getKey(oldTime, partitionNum);
             newKey = getKey(newTime, partitionNum);
-            result = jedis.smove(oldKey, newKey, schedulerData.getKey());
-            log.info("Updated value " + schedulerData.getKey() + "From " + oldKey + "To " + newKey);
+            result = jedis.smove(oldKey, newKey, schedulerEntry.getKey());
+            log.info("Updated value " + schedulerEntry.getKey() + "From " + oldKey + "To " + newKey);
             return result;
         } catch (Exception ex) {
-            log.error("Exception occurred  for -" + schedulerData.getKey() + "Key" + oldKey + "Partition " + partitionNum + "-" + ex.getMessage());
+            log.error("Exception occurred  for -" + schedulerEntry.getKey() + "Key" + oldKey + "Partition " + partitionNum + "-" + ex.getMessage());
             throw new SchedulerException(ex, ErrorCode.DATASTORE_READWRITE_ERROR);
         }
 
@@ -112,8 +112,8 @@ public class RedisSchedulerStore implements SchedulerStore {
             key = getKey(time, partitionNum);
             resultSet = jedis.srandmember(key, n);
             log.info("Get For " + key + "-" + resultSet);
-            Set<String> dataKeySet = resultSet.stream().map(this::getPayloadKey).collect(Collectors.toSet());
-            schedulerDataList = getSchedulerPayloadValues(partitionNum, dataKeySet);
+            Set<String> payloadKeys = resultSet.stream().map(this::getPayloadKey).collect(Collectors.toSet());
+            schedulerDataList = getSchedulerPayloadValues(partitionNum, payloadKeys);
         } catch (Exception ex) {
             log.error("Exception occurred  for -" + "Key" + key + "Partition " + partitionNum + "-" + ex.getMessage());
             throw new SchedulerException(ex, ErrorCode.DATASTORE_READWRITE_ERROR);
@@ -121,20 +121,20 @@ public class RedisSchedulerStore implements SchedulerStore {
         return schedulerDataList;
     }
 
-    private List<SchedulerEntry> getSchedulerPayloadValues(int partitionNum, Collection<String> resultSet) throws SchedulerException {
+    private List<SchedulerEntry> getSchedulerPayloadValues(int partitionNum, Collection<String> payloadKeys) throws SchedulerException {
         List<SchedulerEntry> schedulerDataList = new ArrayList<>();
-        if (resultSet.isEmpty())
+        if (payloadKeys.isEmpty())
             return schedulerDataList;
         try (Jedis jedis = _getInstance(partitionNum)) {
             //https://stackoverflow.com/questions/174093/toarraynew-myclass0-or-toarraynew-myclassmylist-size
-            String[] keys = resultSet.toArray(new String[0]);
+            String[] keys = payloadKeys.toArray(new String[0]);
             List<String> schedulerValues = jedis.mget(keys);
-            Iterator<String> keyIterator = resultSet.iterator();
+            Iterator<String> keyIterator = payloadKeys.iterator();
             Iterator<String> valueIterator = schedulerValues.iterator();
             while (keyIterator.hasNext() && valueIterator.hasNext()) {
                 String key = keyIterator.next();
                 String value = Optional.ofNullable(valueIterator.next()).orElse(key);
-                schedulerDataList.add(new DefaultSchedulerEntry(key, value));
+                schedulerDataList.add(new DefaultSchedulerEntry(removePrefix(key), value));
             }
         } catch (Exception ex) {
             log.error("Exception occurred  for -" + "mget payload for Partition " + partitionNum + "-" + ex.getMessage());
@@ -149,7 +149,7 @@ public class RedisSchedulerStore implements SchedulerStore {
         try (Jedis jedis = _getInstance(partitionNum)) {
             Pipeline pipeline = jedis.pipelined();
             key = getKey(time, partitionNum);
-            for (String value : values){
+            for (String value : values) {
                 pipeline.srem(key, value);
                 pipeline.del(getPayloadKey(value));
             }
@@ -168,6 +168,11 @@ public class RedisSchedulerStore implements SchedulerStore {
     private String getPayloadKey(String rawKey) {
         String prefix = keyPrefix != null && !keyPrefix.equals("") ? keyPrefix + DELIMITER : "";
         return prefix + rawKey;
+    }
+
+    private String removePrefix(String prefixedKey) {
+        String prefix = keyPrefix != null && !keyPrefix.equals("") ? keyPrefix + DELIMITER : "";
+        return prefixedKey.replace(prefix, "");
     }
 
     private static String convertNumToString(long time) {
