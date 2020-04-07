@@ -60,26 +60,27 @@ public class SchedulerClientTest {
     @Test
     public void testAdd() throws SchedulerException {
         schedulerClient.add(entry, timeValue);
-        verify(store).add(null, timeValue, partitionNum);
+        verify(store).add(entry, timeValue, partitionNum);
         verifyForCorrectFlow();
     }
 
     @Test
     public void testUpdate() throws SchedulerException {
+        when(store.update(entry, timeValue, newTimeValue, partitionNum)).thenReturn(dataStoreReturnValue);
         boolean result = schedulerClient.update(entry, timeValue, newTimeValue);
         assertTrue(result);
         verify(timeBucket).toBucket(newTimeValue);
-        verify(store).update(null, timeValue, newTimeValue, partitionNum);
+        verify(store).update(entry, timeValue, newTimeValue, partitionNum);
         verifyForCorrectFlow();
     }
 
     @Test
     public void testUpdateWrongValue() throws SchedulerException {
-        when(store.update(null, timeValue, newTimeValue, partitionNum)).thenReturn(dataStoreWrongValue);
+        when(store.update(entry, timeValue, newTimeValue, partitionNum)).thenReturn(dataStoreWrongValue);
         boolean result = schedulerClient.update(entry, timeValue, newTimeValue);
         assertFalse(result);
         verify(timeBucket).toBucket(newTimeValue);
-        verify(store).update(null, timeValue, newTimeValue, partitionNum);
+        verify(store).update(entry, timeValue, newTimeValue, partitionNum);
         verifyForCorrectFlow();
     }
 
@@ -102,17 +103,17 @@ public class SchedulerClientTest {
 
     @Test(expected = SchedulerException.class)
     public void testAddException() throws SchedulerException {
-        doThrow(new SchedulerException("Store Error", ErrorCode.DATASTORE_READWRITE_ERROR)).when(store).add(null, timeValue, partitionNum);
+        doThrow(new SchedulerException("Store Error", ErrorCode.DATASTORE_READWRITE_ERROR)).when(store).add(entry, timeValue, partitionNum);
         schedulerClient.add(entry, timeValue);
-        verify(store).add(null, timeValue, partitionNum);
+        verify(store).add(entry, timeValue, partitionNum);
         verifyForCorrectFlow();
     }
 
     @Test(expected = SchedulerException.class)
     public void testUpdateException() throws SchedulerException {
-        doThrow(new SchedulerException("Store Error", ErrorCode.DATASTORE_READWRITE_ERROR)).when(store).update(null, timeValue, newTimeValue, partitionNum);
+        doThrow(new SchedulerException("Store Error", ErrorCode.DATASTORE_READWRITE_ERROR)).when(store).update(entry, timeValue, newTimeValue, partitionNum);
         schedulerClient.update(entry, timeValue, newTimeValue);
-        verify(store).update(null, timeValue, newTimeValue, partitionNum);
+        verify(store).update(entry, timeValue, newTimeValue, partitionNum);
         verifyForCorrectFlow();
     }
 
