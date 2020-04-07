@@ -182,8 +182,10 @@ public class RedisSchedulerStore implements SchedulerStore {
             jedis = _getInstance(partitionNum);
             Pipeline pipeline = jedis.pipelined();
             key = getKey(time, partitionNum);
-            for (String value : values)
+            for (String value : values){
                 pipeline.srem(key, value);
+                pipeline.del(getPayloadKey(value));
+            }
             log.info("Removed values " + values + "From" + key);
         } catch (Exception ex) {
             log.error("Exception occurred  for -" + values + "Key" + key + "Partition " + partitionNum + "-" + ex.getMessage());
