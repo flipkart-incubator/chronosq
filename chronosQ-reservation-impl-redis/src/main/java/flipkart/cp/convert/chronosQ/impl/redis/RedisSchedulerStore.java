@@ -93,8 +93,7 @@ public class RedisSchedulerStore implements SchedulerStore {
             key = getKey(time, partitionNum);
             resultSet = jedis.smembers(key);
             log.info("Get For " + key + "-" + resultSet);
-            Set<String> dataKeySet = resultSet.stream().map(this::getPayloadKey).collect(Collectors.toSet());
-            schedulerDataList = getSchedulerPayloadValues(partitionNum, dataKeySet);
+            schedulerDataList = getSchedulerPayloadValues(partitionNum, resultSet);
         } catch (Exception ex) {
             log.error("Exception occurred  for -" + "Key" + key + "Partition " + partitionNum + "-" + ex.getMessage());
             throw new SchedulerException(ex, ErrorCode.DATASTORE_READWRITE_ERROR);
@@ -112,8 +111,7 @@ public class RedisSchedulerStore implements SchedulerStore {
             key = getKey(time, partitionNum);
             resultSet = jedis.srandmember(key, n);
             log.info("Get For " + key + "-" + resultSet);
-            Set<String> payloadKeys = resultSet.stream().map(this::getPayloadKey).collect(Collectors.toSet());
-            schedulerDataList = getSchedulerPayloadValues(partitionNum, payloadKeys);
+            schedulerDataList = getSchedulerPayloadValues(partitionNum, resultSet);
         } catch (Exception ex) {
             log.error("Exception occurred  for -" + "Key" + key + "Partition " + partitionNum + "-" + ex.getMessage());
             throw new SchedulerException(ex, ErrorCode.DATASTORE_READWRITE_ERROR);
@@ -121,21 +119,21 @@ public class RedisSchedulerStore implements SchedulerStore {
         return schedulerDataList;
     }
 
-    private List<SchedulerEntry> getSchedulerPayloadValues(int partitionNum, Collection<String> payloadKeys) throws SchedulerException {
+    private List<SchedulerEntry> getSchedulerPayloadValues(int partitionNum, Collection<String> resultSet) throws SchedulerException {
         List<SchedulerEntry> schedulerDataList = new ArrayList<>();
-        if (payloadKeys.isEmpty())
+        if (resultSet.isEmpty())
             return schedulerDataList;
         try (Jedis jedis = _getInstance(partitionNum)) {
+            Set<String> payloadKeys = resultSet.stream().map(this::getPayloadKey).collect(Collectors.toSet());
             //https://stackoverflow.com/questions/174093/toarraynew-myclass0-or-toarraynew-myclassmylist-size
             String[] keys = payloadKeys.toArray(new String[0]);
             List<String> schedulerValues = jedis.mget(keys);
-            Iterator<String> keyIterator = payloadKeys.iterator();
+            Iterator<String> keyIterator = resultSet.iterator();
             Iterator<String> valueIterator = schedulerValues.iterator();
             while (keyIterator.hasNext() && valueIterator.hasNext()) {
                 String key = keyIterator.next();
-                String originalKey = removePrefix(key);
-                String value = Optional.ofNullable(valueIterator.next()).orElse(originalKey);
-                schedulerDataList.add(new DefaultSchedulerEntry(originalKey, value));
+                String value = Optional.ofNullable(valueIterator.next()).orElse(key);
+                schedulerDataList.add(new DefaultSchedulerEntry(key, value));
             }
         } catch (Exception ex) {
             log.error("Exception occurred  for -" + "mget payload for Partition " + partitionNum + "-" + ex.getMessage());
@@ -169,11 +167,6 @@ public class RedisSchedulerStore implements SchedulerStore {
     private String getPayloadKey(String rawKey) {
         String prefix = keyPrefix != null && !keyPrefix.equals("") ? keyPrefix + DELIMITER : "";
         return prefix + rawKey;
-    }
-
-    private String removePrefix(String prefixedKey) {
-        String prefix = keyPrefix != null && !keyPrefix.equals("") ? keyPrefix + DELIMITER : "";
-        return prefixedKey.replace(prefix, "");
     }
 
     private static String convertNumToString(long time) {
