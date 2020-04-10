@@ -40,18 +40,18 @@ public class HbaseSchedulerStore implements SchedulerStore {
 
 
     @Override
-    public void add(SchedulerEntry value, long time, int partitionNo) throws SchedulerException {
-        String rowKey = getRowKey(value.getKey(), time, partitionNo);
+    public void add(SchedulerEntry schedulerEntry, long time, int partitionNo) throws SchedulerException {
+        String rowKey = getRowKey(schedulerEntry.getKey(), time, partitionNo);
         Table hTable = null;
         try {
             hTable = getHTable();
-            if (!value.getPayload().equals(value.getKey())) {
-                hTable.put(HbaseUtils.createPut(rowKey, columnFamily, Collections.singletonMap(column, value.getPayload().getBytes())));
+            if (!schedulerEntry.getPayload().equals(schedulerEntry.getKey())) {
+                hTable.put(HbaseUtils.createPut(rowKey, columnFamily, Collections.singletonMap(column, schedulerEntry.getPayload().getBytes())));
             } else {
                 hTable.put(HbaseUtils.createPut(rowKey, columnFamily, dummyData));
             }
         } catch (IOException e) {
-            log.error("Exception occurred  for adding  -" + value + "Key" + time + "Partition " + partitionNo + "-" + e.fillInStackTrace());
+            log.error("Exception occurred  for adding  -" + schedulerEntry + "Key" + time + "Partition " + partitionNo + "-" + e.fillInStackTrace());
             throw new SchedulerException(e, ErrorCode.DATASTORE_READWRITE_ERROR);
         } finally {
             releaseHTableInterface(hTable);
@@ -59,9 +59,9 @@ public class HbaseSchedulerStore implements SchedulerStore {
     }
 
     @Override
-    public Long update(SchedulerEntry value, long oldTime, long newTime, int partitionNo) throws SchedulerException {
-        add(value, newTime, partitionNo);
-        return remove(value.getKey(), oldTime, partitionNo);
+    public Long update(SchedulerEntry schedulerEntry, long oldTime, long newTime, int partitionNo) throws SchedulerException {
+        add(schedulerEntry, newTime, partitionNo);
+        return remove(schedulerEntry.getKey(), oldTime, partitionNo);
     }
 
     @Override

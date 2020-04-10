@@ -20,8 +20,8 @@ public class KafkaSchedulerSinkExample {
         props.put("serializer.class", "kafka.serializer.StringEncoder");
         KafkaSchedulerSink kafkaSchedulerSink = new KafkaSchedulerSink(props, "test_scheduler_002", new KafkaMessage() {
             @Override
-            public ProducerRecord<byte[], byte[]> getKeyedMessage(String topic, SchedulerEntry value) {
-                return new ProducerRecord<byte[], byte[]>(topic, value.getKey().getBytes(), value.getPayload().getBytes());
+            public ProducerRecord<byte[], byte[]> getKeyedMessage(String topic, SchedulerEntry schedulerEntry) {
+                return new ProducerRecord<byte[], byte[]>(topic, schedulerEntry.getKey().getBytes(), schedulerEntry.getPayload().getBytes());
             }
         });
         List<SchedulerEntry> values = new ArrayList<>();

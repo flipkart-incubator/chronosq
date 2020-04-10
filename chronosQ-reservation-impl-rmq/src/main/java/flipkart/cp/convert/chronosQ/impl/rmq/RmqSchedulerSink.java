@@ -37,21 +37,21 @@ public class RmqSchedulerSink implements SchedulerSink {
     }
 
     @Override
-    public CompletableFuture<Void> giveExpiredForProcessing(SchedulerEntry value) throws SchedulerException {
+    public CompletableFuture<Void> giveExpiredForProcessing(SchedulerEntry schedulerEntry) throws SchedulerException {
         try {
-            log.info("Got message to be published " + value);
-            channel.basicPublish(exchange, queueName, null, value.getPayload().getBytes());
-            log.info("Message published -" + value);
+            log.info("Got message to be published " + schedulerEntry);
+            channel.basicPublish(exchange, queueName, null, schedulerEntry.getPayload().getBytes());
+            log.info("Message published -" + schedulerEntry);
             return CompletableFuture.completedFuture(null);
         } catch (IOException ex) {
-            log.error("Unable to publish message to queue - " + value + "-" + ex.getMessage());
+            log.error("Unable to publish message to queue - " + schedulerEntry + "-" + ex.getMessage());
             throw new SchedulerException(ex, ErrorCode.SCHEDULER_SINK_ERROR);
         }
     }
 
     @Override
-    public CompletableFuture<Void> giveExpiredListForProcessing(List<SchedulerEntry> values) throws SchedulerException {
-        for (SchedulerEntry value : values)
+    public CompletableFuture<Void> giveExpiredListForProcessing(List<SchedulerEntry> schedulerEntries) throws SchedulerException {
+        for (SchedulerEntry value : schedulerEntries)
             giveExpiredForProcessing(value);
         return CompletableFuture.completedFuture(null);
     }

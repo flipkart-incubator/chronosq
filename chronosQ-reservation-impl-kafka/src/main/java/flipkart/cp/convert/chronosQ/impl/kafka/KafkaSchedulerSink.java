@@ -33,12 +33,12 @@ public class KafkaSchedulerSink implements SchedulerSink {
     }
 
     @Override
-    public CompletableFuture<RecordMetadata> giveExpiredForProcessing(SchedulerEntry value) throws SchedulerException {
+    public CompletableFuture<RecordMetadata> giveExpiredForProcessing(SchedulerEntry schedulerEntry) throws SchedulerException {
         CompletableFuture<RecordMetadata> completableFuture = new CompletableFuture<>();
-        if (null != value) {
+        if (null != schedulerEntry) {
             try {
-                log.debug("Pushing to kafka message: {}", value);
-                producer.send(kafkaMessage.getKeyedMessage(topic, value), (metadata, exception) -> {
+                log.debug("Pushing to kafka message: {}", schedulerEntry);
+                producer.send(kafkaMessage.getKeyedMessage(topic, schedulerEntry), (metadata, exception) -> {
                     if (exception != null)
                         completableFuture.completeExceptionally(exception);
                     else
@@ -46,7 +46,7 @@ public class KafkaSchedulerSink implements SchedulerSink {
                 });
                 return completableFuture;
             } catch (Exception e) {
-                log.error("Exception occurred for value " + value + "-" + e.fillInStackTrace());
+                log.error("Exception occurred for value " + schedulerEntry + "-" + e.fillInStackTrace());
                 throw new SchedulerException(e, ErrorCode.SCHEDULER_SINK_ERROR);
             }
         }
@@ -55,9 +55,9 @@ public class KafkaSchedulerSink implements SchedulerSink {
     }
 
     @Override
-    public Future<List<RecordMetadata>> giveExpiredListForProcessing(List<SchedulerEntry> storeEntries) throws SchedulerException {
+    public Future<List<RecordMetadata>> giveExpiredListForProcessing(List<SchedulerEntry> schedulerEntries) throws SchedulerException {
         List<ProducerRecord<byte[], byte[]>> data = new ArrayList<>();
-        for (SchedulerEntry storeValue : storeEntries) {
+        for (SchedulerEntry storeValue : schedulerEntries) {
             if (null != storeValue) {
                 data.add(kafkaMessage.getKeyedMessage(topic, storeValue));
             }

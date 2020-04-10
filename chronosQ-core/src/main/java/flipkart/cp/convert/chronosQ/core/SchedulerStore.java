@@ -6,9 +6,9 @@ import java.util.List;
 
 public interface SchedulerStore {
 
-    void add(SchedulerEntry value, long time, int partitionNum) throws SchedulerException;
+    void add(SchedulerEntry schedulerEntry, long time, int partitionNum) throws SchedulerException;
 
-    Long update(SchedulerEntry value, long oldTime, long newTime, int partitionNum) throws SchedulerException;
+    Long update(SchedulerEntry schedulerEntry, long oldTime, long newTime, int partitionNum) throws SchedulerException;
 
     Long remove(String value, long time, int partitionNum) throws SchedulerException;
 
