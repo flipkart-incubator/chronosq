@@ -4,7 +4,7 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 import redis.clients.jedis.JedisShardInfo;
-import redis.clients.util.Pool;
+import redis.clients.jedis.util.Pool;
 
 import java.util.ArrayList;
 import java.util.List;

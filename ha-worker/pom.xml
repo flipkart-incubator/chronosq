@@ -8,10 +8,10 @@
     <parent>
         <artifactId>chronosQ</artifactId>
         <groupId>chronosQ</groupId>
-        <version>1.6</version>
+        <version>2.0.1</version>
     </parent>
     
-    <version>1.6.8-SNAPSHOT</version>
+    <version>${package.version}</version>
     <modelVersion>4.0.0</modelVersion>
 
     <dependencies>
