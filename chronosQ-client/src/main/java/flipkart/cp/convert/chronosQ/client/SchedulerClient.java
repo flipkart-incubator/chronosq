@@ -44,7 +44,7 @@ public class SchedulerClient<Entry extends SchedulerEntry> {
         int partitionNumber = partitioner.getPartition(val);
         Timer.Context context = null;
         if (metricRegistry != null) {
-            addTimeTaken = metricRegistry.timer("scheduler.SchedulerClient.AddRequests" + "-Partition " + partitionNumber);
+            addTimeTaken = metricRegistry.timer("scheduler.SchedulerClient.AddRequests.partition_" + partitionNumber);
             context = addTimeTaken.time();
         }
         try {
@@ -66,7 +66,7 @@ public class SchedulerClient<Entry extends SchedulerEntry> {
         int partitionNumber = partitioner.getPartition(val);
         Timer.Context context = null;
         if (metricRegistry != null) {
-            updateTimeTaken = metricRegistry.timer("scheduler.SchedulerClient.UpdateRequests" + "-Partition " + partitionNumber);
+            updateTimeTaken = metricRegistry.timer("scheduler.SchedulerClient.UpdateRequests.partition_" + partitionNumber);
             context = updateTimeTaken.time();
         }
         try {
@@ -90,7 +90,7 @@ public class SchedulerClient<Entry extends SchedulerEntry> {
         int partitionNumber = partitioner.getPartition(val);
         Timer.Context context = null;
         if (metricRegistry != null) {
-            removeTimeTaken = metricRegistry.timer("scheduler.SchedulerClient.RemoveRequests" + "-Partition " + partitionNumber);
+            removeTimeTaken = metricRegistry.timer("scheduler.SchedulerClient.RemoveRequests.partition_" + partitionNumber);
             context = removeTimeTaken.time();
         }
         try {
