@@ -66,7 +66,7 @@ public class RedisSchedulerCheckPointTest {
 
     private void checkJedisFlow() {
         verify(jedisPool).getResource();
-        verify(jedisPool).returnResource(jedis);
+        //verify(jedisPool).returnResource(jedis);
         verifyZeroInteractions(jedisPool);
     }
 
