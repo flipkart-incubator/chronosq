@@ -6,6 +6,7 @@ import flipkart.cp.convert.chronosQ.core.SchedulerStore;
 import flipkart.cp.convert.chronosQ.exceptions.SchedulerException;
 import flipkart.cp.convert.chronosQ.impl.redis.RedisParitioner;
 import flipkart.cp.convert.chronosQ.impl.redis.RedisSchedulerStore;
+import flipkart.cp.convert.chronosQ.core.SchedulerStore;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -86,6 +87,7 @@ public class RedisSchedulerStoreTest {
         assertEquals(0, value.size());
         checkRedisPartitionerFlow(1);
     }
+
 
 
     @Test(expected = SchedulerException.class)

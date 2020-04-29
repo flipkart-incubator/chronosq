@@ -2,6 +2,9 @@ package flipkart.cp.convert.reservation.scheduler.worker;
 
 import com.codahale.metrics.MetricRegistry;
 import flipkart.cp.convert.chronosQ.core.*;
+import flipkart.cp.convert.chronosQ.core.*;
+import flipkart.cp.convert.reservation.scheduler.worker.task.Factory;
+import flipkart.cp.convert.reservation.scheduler.worker.task.WorkerTask;
 import flipkart.cp.convert.chronosQ.exceptions.ErrorCode;
 import flipkart.cp.convert.chronosQ.exceptions.SchedulerException;
 import flipkart.cp.convert.ha.worker.exception.WorkerException;
@@ -12,6 +15,9 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import static org.mockito.Mockito.*;
+
+import java.util.Arrays;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -60,7 +66,7 @@ public class WorkerTaskImplTest {
     }
 
     @Test
-    public void processTest() throws SchedulerException, WorkerException, InterruptedException {
+    public void processTest()  throws Exception {
         Thread thread = new Thread(() -> workerTask.process());
         thread.start();
         Thread.sleep(500);
