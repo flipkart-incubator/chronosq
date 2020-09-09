@@ -6,11 +6,11 @@
 
     <groupId>chronosQ</groupId>
     <artifactId>chronosQ</artifactId>
-    <version>2.0.1</version>
+    <version>2.0.2</version>
     <packaging>pom</packaging>
 
     <properties>
-            <package.version>2.0.1</package.version>
+            <package.version>2.0.2</package.version>
     </properties>
 
     <modules>

@@ -11,7 +11,6 @@ import redis.clients.jedis.Pipeline;
 import redis.clients.jedis.util.Pool;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Slf4j
 public class RedisSchedulerStore implements SchedulerStore {
@@ -124,11 +123,10 @@ public class RedisSchedulerStore implements SchedulerStore {
         if (resultSet.isEmpty())
             return schedulerDataList;
         try (Jedis jedis = _getInstance(partitionNum)) {
-            Set<String> payloadKeys = resultSet.stream().map(this::getPayloadKey).collect(Collectors.toSet());
-            //https://stackoverflow.com/questions/174093/toarraynew-myclass0-or-toarraynew-myclassmylist-size
-            String[] keys = payloadKeys.toArray(new String[0]);
+            Set<String> keySet = new HashSet<>(resultSet);
+            String[] keys = keySet.stream().map(this::getPayloadKey).toArray(String[]::new);
             List<String> schedulerValues = jedis.mget(keys);
-            Iterator<String> keyIterator = resultSet.iterator();
+            Iterator<String> keyIterator = keySet.iterator();
             Iterator<String> valueIterator = schedulerValues.iterator();
             while (keyIterator.hasNext() && valueIterator.hasNext()) {
                 String key = keyIterator.next();

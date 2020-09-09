@@ -6,7 +6,6 @@ import flipkart.cp.convert.chronosQ.core.SchedulerStore;
 import flipkart.cp.convert.chronosQ.exceptions.SchedulerException;
 import flipkart.cp.convert.chronosQ.impl.redis.RedisParitioner;
 import flipkart.cp.convert.chronosQ.impl.redis.RedisSchedulerStore;
-import flipkart.cp.convert.chronosQ.core.SchedulerStore;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -40,6 +39,7 @@ public class RedisSchedulerStoreTest {
     private final String value = "testSourceValue";
     private final int firstKey = 500;
     private final int secondKey = 520;
+    private final int thirdKey = 1200;
     private final int partitionNum = 1;
     private final int newKey = 720;
     private final int removalKey = 800;
@@ -89,7 +89,6 @@ public class RedisSchedulerStoreTest {
     }
 
 
-
     @Test(expected = SchedulerException.class)
     public void notRemoveDataStore() throws SchedulerException {
         returnNullRedis();
@@ -120,11 +119,25 @@ public class RedisSchedulerStoreTest {
     }
 
     @Test
+    public void getNFromSetVerifyData() throws SchedulerException {
+        redisSchedulerStore.add(new DefaultSchedulerEntry("key1"), thirdKey, partitionNum);
+        redisSchedulerStore.add(new DefaultSchedulerEntry("key2", "value2"), thirdKey, partitionNum);
+        List<SchedulerEntry> result = redisSchedulerStore.getNextN(thirdKey, partitionNum, 2);
+        assertTrue(result.size() == 2);
+
+        assertEquals("key1", result.get(0).getKey());
+        assertEquals("key2", result.get(1).getKey());
+        assertEquals("value2", result.get(1).getPayload());
+        checkRedisPartitionerFlow(4);
+    }
+
+    @Test
     public void getNFromSet() throws SchedulerException {
         int result = redisSchedulerStore.getNextN(secondKey, partitionNum, n).size();
         assertTrue(result == n);
         checkRedisPartitionerFlow(2);
     }
+
 
     @Test
     public void removeNFromSet() throws SchedulerException {
