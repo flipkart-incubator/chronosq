@@ -128,11 +128,9 @@ public class RedisSchedulerStore implements SchedulerStore {
             //https://stackoverflow.com/questions/174093/toarraynew-myclass0-or-toarraynew-myclassmylist-size
             String[] keys = payloadKeys.toArray(new String[0]);
             List<String> schedulerValues = jedis.mget(keys);
-            Iterator<String> keyIterator = resultSet.iterator();
-            Iterator<String> valueIterator = schedulerValues.iterator();
-            while (keyIterator.hasNext() && valueIterator.hasNext()) {
-                String key = keyIterator.next();
-                String value = Optional.ofNullable(valueIterator.next()).orElse(key);
+            for (int i = 0; i < keys.length; i++) {
+                String key = keys[i];
+                String value = Optional.ofNullable(schedulerValues.get(i)).orElse(key);
                 schedulerDataList.add(new DefaultSchedulerEntry(key, value));
             }
         } catch (Exception ex) {
