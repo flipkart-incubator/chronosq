@@ -3,11 +3,8 @@ package flipkart.cp.convert.chronosQ.client;
 
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
-import flipkart.cp.convert.chronosQ.core.TimeBucket;
+import flipkart.cp.convert.chronosQ.core.*;
 import flipkart.cp.convert.chronosQ.exceptions.ErrorCode;
-import flipkart.cp.convert.chronosQ.core.Partitioner;
-import flipkart.cp.convert.chronosQ.core.SchedulerEntry;
-import flipkart.cp.convert.chronosQ.core.SchedulerStore;
 import flipkart.cp.convert.chronosQ.exceptions.SchedulerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,15 +37,15 @@ public class SchedulerClient<Entry extends SchedulerEntry> {
     }
 
     public void add(Entry schedulerEntry, long time) throws SchedulerException {
-        String val = schedulerEntry.getStringValue();
+        String val = schedulerEntry.getKey();
         int partitionNumber = partitioner.getPartition(val);
         Timer.Context context = null;
         if (metricRegistry != null) {
-            addTimeTaken = metricRegistry.timer("scheduler.SchedulerClient.AddRequests" + "-Partition " + partitionNumber);
+            addTimeTaken = metricRegistry.timer("scheduler.SchedulerClient.AddRequests.partition_" + partitionNumber);
             context = addTimeTaken.time();
         }
         try {
-            store.add(val, timeBucket.toBucket(time), partitionNumber);
+            store.add(schedulerEntry, timeBucket.toBucket(time), partitionNumber);
             log.info("Add :" + val + "-" + time);
         } catch (Exception ex) {
             log.error("Unable to add to scheduler  :" + val + "-" + time + ex.fillInStackTrace());
@@ -61,16 +58,16 @@ public class SchedulerClient<Entry extends SchedulerEntry> {
     }
 
     public boolean update(Entry schedulerEntry, long oldTime, long newTime) throws SchedulerException {
-        String val = schedulerEntry.getStringValue();
+        String val = schedulerEntry.getKey();
         boolean result = false;
         int partitionNumber = partitioner.getPartition(val);
         Timer.Context context = null;
         if (metricRegistry != null) {
-            updateTimeTaken = metricRegistry.timer("scheduler.SchedulerClient.UpdateRequests" + "-Partition " + partitionNumber);
+            updateTimeTaken = metricRegistry.timer("scheduler.SchedulerClient.UpdateRequests.partition_" + partitionNumber);
             context = updateTimeTaken.time();
         }
         try {
-            Long storeResult = store.update(val, timeBucket.toBucket(oldTime), timeBucket.toBucket(newTime), partitionNumber);
+            Long storeResult = store.update(schedulerEntry, timeBucket.toBucket(oldTime), timeBucket.toBucket(newTime), partitionNumber);
             if (storeResult != DATASTORE_NO_OPERATION)
                 result = true;
             log.info("Updated :" + val + "-" + "From " + oldTime + " To" + newTime);
@@ -85,12 +82,12 @@ public class SchedulerClient<Entry extends SchedulerEntry> {
     }
 
     public boolean remove(Entry schedulerEntry, long time) throws SchedulerException {
-        String val = schedulerEntry.getStringValue();
+        String val = schedulerEntry.getKey();
         boolean result = false;
         int partitionNumber = partitioner.getPartition(val);
         Timer.Context context = null;
         if (metricRegistry != null) {
-            removeTimeTaken = metricRegistry.timer("scheduler.SchedulerClient.RemoveRequests" + "-Partition " + partitionNumber);
+            removeTimeTaken = metricRegistry.timer("scheduler.SchedulerClient.RemoveRequests.partition_" + partitionNumber);
             context = removeTimeTaken.time();
         }
         try {
@@ -106,6 +103,10 @@ public class SchedulerClient<Entry extends SchedulerEntry> {
             if ((context != null))
                 context.stop();
         }
+    }
+
+    public static <Entry extends SchedulerEntry> SchedulerClient.Builder<Entry> builder() {
+        return new SchedulerClient.Builder<>();
     }
 
     public static class Builder<Entry extends SchedulerEntry> {

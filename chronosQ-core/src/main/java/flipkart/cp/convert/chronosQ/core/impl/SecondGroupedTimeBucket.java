@@ -17,14 +17,21 @@ public class SecondGroupedTimeBucket implements TimeBucket {
     @Override
     public long toBucket(long epochTimestamp) {
         long result = epochTimestamp - (epochTimestamp % (numOfSecsForABucket * 1000));
-        log.info("Value " + epochTimestamp + "is bucketed to " + result);
+        log.info("Value " + epochTimestamp + " is bucketed to " + result);
         return result;
     }
 
     @Override
     public long next(long epochTimestamp) {
         long result = toBucket(epochTimestamp) + (numOfSecsForABucket * 1000);
-        log.info("Value " + epochTimestamp + "Next bucket is " + result);
+        log.info("Value " + epochTimestamp + " Next bucket is " + result);
+        return result;
+    }
+
+    @Override
+    public long previous(long epochTimestamp) {
+        long result = toBucket(epochTimestamp) - (numOfSecsForABucket * 1000);
+        log.info("Value " + epochTimestamp + " Previous bucket is " + result);
         return result;
     }
 

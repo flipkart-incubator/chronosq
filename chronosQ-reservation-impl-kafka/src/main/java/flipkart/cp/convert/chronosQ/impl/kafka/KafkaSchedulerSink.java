@@ -1,62 +1,91 @@
 package flipkart.cp.convert.chronosQ.impl.kafka;
 
 
+import flipkart.cp.convert.chronosQ.core.SchedulerEntry;
 import flipkart.cp.convert.chronosQ.core.SchedulerSink;
 import flipkart.cp.convert.chronosQ.exceptions.ErrorCode;
 import flipkart.cp.convert.chronosQ.exceptions.SchedulerException;
-import kafka.javaapi.producer.Producer;
-import kafka.producer.KeyedMessage;
-import kafka.producer.ProducerConfig;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.Producer;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.clients.producer.RecordMetadata;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
+import java.util.stream.Collectors;
 
 
-
+@Slf4j
 public class KafkaSchedulerSink implements SchedulerSink {
 
-    static Logger log = LoggerFactory.getLogger(KafkaSchedulerSink.class.getSimpleName());
     private final String topic;
     private final KafkaMessage kafkaMessage;
-    private final Producer producer;
+    private Producer<byte[], byte[]> producer;
 
-
-    public KafkaSchedulerSink(ProducerConfig config,String topic, KafkaMessage kafkaMessage) {
+    public KafkaSchedulerSink(Properties properties, String topic, KafkaMessage kafkaMessage) {
         this.topic = topic;
-        this.producer = new Producer(config);
-        this.kafkaMessage =  kafkaMessage;
+        this.producer = new KafkaProducer<>(properties);
+        this.kafkaMessage = kafkaMessage;
     }
-    
+
     @Override
-    public void giveExpiredForProcessing(String value) throws SchedulerException {
-        if(null != value) {
+    public CompletableFuture<RecordMetadata> giveExpiredForProcessing(SchedulerEntry schedulerEntry) throws SchedulerException {
+        CompletableFuture<RecordMetadata> completableFuture = new CompletableFuture<>();
+        if (null != schedulerEntry) {
             try {
-                producer.send(kafkaMessage.getKeyedMessage(topic,value));
-                log.info("Message published -" + value);
+                log.debug("Pushing to kafka message: {}", schedulerEntry);
+                producer.send(kafkaMessage.getKeyedMessage(topic, schedulerEntry), (metadata, exception) -> {
+                    if (exception != null)
+                        completableFuture.completeExceptionally(exception);
+                    else
+                        completableFuture.complete(metadata);
+                });
+                return completableFuture;
             } catch (Exception e) {
-                log.error("Exception occurred for value " + value + "-" + e.fillInStackTrace());
+                log.error("Exception occurred for value " + schedulerEntry + "-" + e.fillInStackTrace());
                 throw new SchedulerException(e, ErrorCode.SCHEDULER_SINK_ERROR);
             }
         }
+        completableFuture.completeExceptionally(new Exception("Value is null"));
+        return completableFuture;
     }
 
     @Override
-    public void giveExpiredListForProcessing(List<String> values) throws SchedulerException {
-
-        List <KeyedMessage<String,String>> data  = new ArrayList<KeyedMessage<String,String>>();
-            for(String value :values){
-                data.add(kafkaMessage.getKeyedMessage(topic, value));
+    public Future<List<RecordMetadata>> giveExpiredListForProcessing(List<SchedulerEntry> schedulerEntries) throws SchedulerException {
+        List<ProducerRecord<byte[], byte[]>> data = new ArrayList<>();
+        for (SchedulerEntry storeValue : schedulerEntries) {
+            if (null != storeValue) {
+                data.add(kafkaMessage.getKeyedMessage(topic, storeValue));
             }
-        try {
-            producer.send(data);
-            log.info("Message published -" +values);
-        } catch (Exception e) {
-            e.printStackTrace();
-            log.error("Exception occurred for value " + values + "-" + e.fillInStackTrace());
-            throw new SchedulerException(e, ErrorCode.SCHEDULER_SINK_ERROR);
         }
+        try {
+            List<CompletableFuture<RecordMetadata>> results = data.stream().map(elem -> {
+                CompletableFuture<RecordMetadata> completableFuture = new CompletableFuture<>();
+                producer.send(elem, (metadata, exception) -> {
+                    if (exception != null)
+                        completableFuture.completeExceptionally(exception);
+                    else
+                        completableFuture.complete(metadata);
+                });
+                return completableFuture;
+            }).collect(Collectors.toList());
+            return sequence(results);
+        } catch (Throwable t) {
+            log.error("Exception in {}, giveExpiredListForProcessing", t.getClass().getSimpleName());
+            throw new SchedulerException(t, ErrorCode.SCHEDULER_SINK_ERROR);
+        }
+    }
+
+    static <T> CompletableFuture<List<T>> sequence(List<CompletableFuture<T>> com) {
+        return CompletableFuture.allOf(com.toArray(new CompletableFuture<?>[com.size()]))
+                .thenApply(v -> com.stream()
+                        .map(CompletableFuture::join)
+                        .collect(Collectors.toList())
+                );
     }
 
 }

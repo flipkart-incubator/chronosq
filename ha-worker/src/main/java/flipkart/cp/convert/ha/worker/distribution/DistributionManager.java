@@ -153,7 +153,7 @@ public class DistributionManager implements Closeable, TreeCacheListener {
 
     private static List<String> _createTaskIdsForExecution(List<String> workerInstances, TaskList taskList, int instanceIndex) {
         List<String> instances = new LinkedList<String>();
-        ArrayList<String> taskNames = taskList.getTaskNames();
+        List<String> taskNames = taskList.getTaskNames();
         for (int i = 0; i < taskNames.size(); i++) {
             if (((i) % workerInstances.size()) == instanceIndex) {
                 instances.add(taskNames.get(i));

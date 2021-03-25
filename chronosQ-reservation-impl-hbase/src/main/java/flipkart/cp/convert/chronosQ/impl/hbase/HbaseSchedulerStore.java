@@ -1,18 +1,18 @@
 package flipkart.cp.convert.chronosQ.impl.hbase;
 
+import flipkart.cp.convert.chronosQ.core.DefaultSchedulerEntry;
+import flipkart.cp.convert.chronosQ.core.SchedulerEntry;
 import flipkart.cp.convert.chronosQ.core.SchedulerStore;
 import flipkart.cp.convert.chronosQ.exceptions.ErrorCode;
 import flipkart.cp.convert.chronosQ.exceptions.SchedulerException;
+import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.*;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 
 public class HbaseSchedulerStore implements SchedulerStore {
@@ -21,7 +21,7 @@ public class HbaseSchedulerStore implements SchedulerStore {
     static private final String START_STRING = "0";
     static private final String END_STRING = "~";
     static private final String DELIMITER = "__";
-    private final HTablePool hTablePool;
+    private final Connection hConnection;
     private final String tableName;
     private final byte[] columnFamily;
     private final byte[] column;
@@ -29,8 +29,8 @@ public class HbaseSchedulerStore implements SchedulerStore {
     private Map<byte[], byte[]> dummyData = new HashMap<>();
 
 
-    public HbaseSchedulerStore(HTablePool hTablePool, String tableName, String columnFamily, String schedulerInstance) {
-        this.hTablePool = hTablePool;
+    public HbaseSchedulerStore(Connection hConnection, String tableName, String columnFamily, String schedulerInstance) {
+        this.hConnection = hConnection;
         this.tableName = tableName;
         this.schedulerInstance = schedulerInstance;
         this.columnFamily = Bytes.toBytes(columnFamily);
@@ -40,55 +40,60 @@ public class HbaseSchedulerStore implements SchedulerStore {
 
 
     @Override
-    public void add(String value, long time, int partitionNo) throws SchedulerException {
-        String rowKey = getRowKey(value, time, partitionNo);
-        HTableInterface hTableInterface = getHTableInterface();
+    public void add(SchedulerEntry schedulerEntry, long time, int partitionNo) throws SchedulerException {
+        String rowKey = getRowKey(schedulerEntry.getKey(), time, partitionNo);
+        Table hTable = null;
         try {
-            hTableInterface.put(HbaseUtils.createPut(rowKey, columnFamily, dummyData));
+            hTable = getHTable();
+            if (!schedulerEntry.getPayload().equals(schedulerEntry.getKey())) {
+                hTable.put(HbaseUtils.createPut(rowKey, columnFamily, Collections.singletonMap(column, schedulerEntry.getPayload().getBytes())));
+            } else {
+                hTable.put(HbaseUtils.createPut(rowKey, columnFamily, dummyData));
+            }
         } catch (IOException e) {
-            log.error("Exception occurred  for adding  -" + value + "Key" + time + "Partition " + partitionNo + "-" + e.fillInStackTrace());
+            log.error("Exception occurred  for adding  -" + schedulerEntry + "Key" + time + "Partition " + partitionNo + "-" + e.fillInStackTrace());
             throw new SchedulerException(e, ErrorCode.DATASTORE_READWRITE_ERROR);
         } finally {
-            releaseHTableInterface(hTableInterface);
+            releaseHTableInterface(hTable);
         }
     }
 
     @Override
-    public Long update(String value, long oldTime, long newTime, int partitionNo) throws SchedulerException {
-        add(value, newTime, partitionNo);
-        return remove(value, oldTime, partitionNo);
+    public Long update(SchedulerEntry schedulerEntry, long oldTime, long newTime, int partitionNo) throws SchedulerException {
+        add(schedulerEntry, newTime, partitionNo);
+        return remove(schedulerEntry.getKey(), oldTime, partitionNo);
     }
 
     @Override
     public Long remove(String value, long time, int partitionNo) throws SchedulerException {
         String rowKey = getRowKey(value, time, partitionNo);
-        HTableInterface hTableInterface = getHTableInterface();
+        Table hTable = null;
         try {
-            boolean deleted = hTableInterface.checkAndDelete(Bytes.toBytes(rowKey), columnFamily, column, dummyData.get(column), new Delete(Bytes.toBytes(rowKey)));
-            if (deleted)
-                return 1L;
-            return 0L;
+            hTable = getHTable();
+            hTable.delete(new Delete(Bytes.toBytes(rowKey)));
+            return 1L;
         } catch (IOException e) {
-            log.error("Exception occurred While  for removing -" + value + "Key" + time + "Partition " + partitionNo + "-" + e.fillInStackTrace());
+            log.error("Exception occurred while  for removing -" + value + "Key" + time + "Partition " + partitionNo + "-" + e.fillInStackTrace());
             throw new SchedulerException(e, ErrorCode.DATASTORE_READWRITE_ERROR);
         } finally {
-            releaseHTableInterface(hTableInterface);
+            releaseHTableInterface(hTable);
         }
     }
 
     @Override
-    public List<String> get(long time, int partitionNum) throws SchedulerException {
-        List<String> entries = new ArrayList<String>();
+    public List<SchedulerEntry> get(long time, int partitionNum) throws SchedulerException {
+        List<SchedulerEntry> entries = new ArrayList<>();
         String startRow = getRowKey(START_STRING, time, partitionNum);
         String stopRow = getRowKey(END_STRING, time, partitionNum);
         Scan scan = HbaseUtils.getScanner(startRow, stopRow, columnFamily);
         ResultScanner resultScanner = null;
-        HTableInterface hTableInterface = getHTableInterface();
+        Table hTable = null;
         try {
-            resultScanner = hTableInterface.getScanner(scan);
+            hTable = getHTable();
+            resultScanner = hTable.getScanner(scan);
             Result result = resultScanner.next();
             while (null != result) {
-                String value = getValue(result);
+                SchedulerEntry value = getValue(result);
                 if (null != value)
                     entries.add(value);
                 result = resultScanner.next();
@@ -99,24 +104,25 @@ public class HbaseSchedulerStore implements SchedulerStore {
         } finally {
             if (null != resultScanner)
                 resultScanner.close();
-            releaseHTableInterface(hTableInterface);
+            releaseHTableInterface(hTable);
         }
         return entries;
     }
 
 
-    public List<String> getNextN(long time, int partitionNum, int n) throws SchedulerException {
-        List<String> entries = new ArrayList<String>();
+    public List<SchedulerEntry> getNextN(long time, int partitionNum, int n) throws SchedulerException {
+        List<SchedulerEntry> entries = new ArrayList<>();
         String startRow = getRowKey(START_STRING, time, partitionNum);
         String stopRow = getRowKey(END_STRING, time, partitionNum);
         Scan scan = HbaseUtils.getScanner(startRow, stopRow, columnFamily);
-        HTableInterface hTableInterface = getHTableInterface();
+        Table hTable = null;
         ResultScanner resultScanner = null;
         try {
-            resultScanner = hTableInterface.getScanner(scan);
+            hTable = getHTable();
+            resultScanner = hTable.getScanner(scan);
             Result[] results = resultScanner.next(n);
             for (Result result : results) {
-                String value = getValue(result);
+                SchedulerEntry value = getValue(result);
                 if (null != value)
                     entries.add(value);
             }
@@ -126,7 +132,7 @@ public class HbaseSchedulerStore implements SchedulerStore {
         } finally {
             if (null != resultScanner)
                 resultScanner.close();
-            releaseHTableInterface(hTableInterface);
+            releaseHTableInterface(hTable);
         }
         return entries;
     }
@@ -136,56 +142,62 @@ public class HbaseSchedulerStore implements SchedulerStore {
         for (String value : values) {
             deletes.add(new Delete(Bytes.toBytes(getRowKey(value, time, partitionNum))));
         }
-        HTableInterface hTableInterface = getHTableInterface();
+        Table hTable = null;
         try {
-            hTableInterface.delete(deletes);
+            hTable = getHTable();
+            hTable.delete(deletes);
         } catch (IOException e) {
             log.error("Exception occurred While  for acking  Key" + time + "Partition " + partitionNum + "-" + e.fillInStackTrace());
             throw new SchedulerException(e, ErrorCode.DATASTORE_READWRITE_ERROR);
         } finally {
-            releaseHTableInterface(hTableInterface);
+            releaseHTableInterface(hTable);
         }
     }
 
 
-    private HTableInterface getHTableInterface() {
-        return hTablePool.getTable(tableName);
+    private Table getHTable() throws IOException {
+        return hConnection.getTable(TableName.valueOf(tableName));
     }
 
-    private void releaseHTableInterface(HTableInterface hTableInterface) throws SchedulerException {
+    private void releaseHTableInterface(Table hTable) throws SchedulerException {
         try {
-            if (null != hTableInterface)
-                hTableInterface.close();
+            if (null != hTable)
+                hTable.close();
         } catch (IOException e) {
-            log.error("Exception occurred While closing htable interface - " + tableName + "-" + e.fillInStackTrace());
+            log.error("Exception occurred While closing hTable interface - " + tableName + "-" + e.fillInStackTrace());
             throw new SchedulerException(e, ErrorCode.DATASTORE_READWRITE_ERROR);
         }
     }
-    
+
     /*
      * Helper Functions
      */
 
-    private String getRowKey(String value, long time, int partitionNo) {
-        return schedulerInstance + DELIMITER + partitionNo + DELIMITER + Long.toString(time) + DELIMITER + value;
+    private String getRowKey(String key, long time, int partitionNo) {
+        return schedulerInstance + DELIMITER + partitionNo + DELIMITER + Long.toString(time) + DELIMITER + key;
     }
 
-    private String getValue(Result result) throws SchedulerException {
+    private SchedulerEntry getValue(Result result) throws SchedulerException {
         String rowKey = new String(result.getRow());
         String[] token = rowKey.split(DELIMITER, 4);
-        if (token.length == 4)
-            return token[3];
-        else {
+        if (token.length == 4) {
+            byte[] payload = result.getValue(columnFamily, column);
+            if (Arrays.equals(Bytes.toBytes(true), payload))
+                return new DefaultSchedulerEntry(token[3]);
+            else
+                return new DefaultSchedulerEntry(token[3], new String(payload));
+        } else {
             //For any invalid entry
-            log.error("INVALID ENTRY : Exception occurred While for reading row -" + rowKey);
-            HTableInterface hTableInterface = getHTableInterface();
+            log.error("INVALID ENTRY : Exception occurred while reading row -" + rowKey);
+            Table hTable = null;
             try {
-                hTableInterface.delete(new Delete(result.getRow()));
+                hTable = getHTable();
+                hTable.delete(new Delete(result.getRow()));
             } catch (IOException e) {
-                log.error("Error in deleting Invalid Entry " + rowKey + " -" + e.fillInStackTrace());
+                log.error("Error in deleting invalid entry " + rowKey + " -" + e.fillInStackTrace());
                 throw new SchedulerException(e, ErrorCode.DATASTORE_READWRITE_ERROR);
             } finally {
-                releaseHTableInterface(hTableInterface);
+                releaseHTableInterface(hTable);
             }
             return null;
         }
