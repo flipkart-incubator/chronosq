@@ -9,7 +9,7 @@
     <version>${package.version}</version>
 
     <properties>
-        <hadoop.version>2.8.5</hadoop.version>
+        <hadoop.version>3.2.3</hadoop.version>
     </properties>
 
     <dependencies>
