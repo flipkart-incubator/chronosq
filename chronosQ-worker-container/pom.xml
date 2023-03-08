@@ -5,10 +5,11 @@
     <parent>
         <artifactId>chronosQ</artifactId>
         <groupId>chronosQ</groupId>
-        <version>2.0.2</version>
+        <version>${revision}</version>
+        <relativePath>..</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <version>${package.version}</version>
+    <version>${revision}</version>
 
     <artifactId>chronosQ-worker-container</artifactId>
     <dependencies>
@@ -16,18 +17,18 @@
         <dependency>
             <groupId>chronosQ</groupId>
             <artifactId>ha-worker</artifactId>
-            <version>${package.version}</version>
+            <version>${revision}</version>
         </dependency>
 
         <dependency>
             <groupId>chronosQ</groupId>
             <artifactId>chronosQ-reservation-impl-redis</artifactId>
-            <version>${package.version}</version>
+            <version>${revision}</version>
         </dependency>
         <dependency>
             <groupId>chronosQ</groupId>
             <artifactId>chronosQ-reservation-impl-rmq</artifactId>
-            <version>${package.version}</version>
+            <version>${revision}</version>
         </dependency>
 
         <dependency>
@@ -38,7 +39,7 @@
         <dependency>
             <groupId>chronosQ</groupId>
             <artifactId>ha-worker</artifactId>
-            <version>${package.version}</version>
+            <version>${revision}</version>
             <scope>compile</scope>
         </dependency>
 
