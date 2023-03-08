@@ -16,18 +16,18 @@
     <dependencies>
 
         <dependency>
-            <groupId>chronosQ</groupId>
+            <groupId>com.flipkart.chronosq</groupId>
             <artifactId>ha-worker</artifactId>
             <version>${revision}</version>
         </dependency>
 
         <dependency>
-            <groupId>chronosQ</groupId>
+            <groupId>com.flipkart.chronosq</groupId>
             <artifactId>chronosQ-reservation-impl-redis</artifactId>
             <version>${revision}</version>
         </dependency>
         <dependency>
-            <groupId>chronosQ</groupId>
+            <groupId>com.flipkart.chronosq</groupId>
             <artifactId>chronosQ-reservation-impl-rmq</artifactId>
             <version>${revision}</version>
         </dependency>
@@ -38,7 +38,7 @@
             <version>4.5.13</version>
        </dependency>
         <dependency>
-            <groupId>chronosQ</groupId>
+            <groupId>com.flipkart.chronosq</groupId>
             <artifactId>ha-worker</artifactId>
             <version>${revision}</version>
             <scope>compile</scope>

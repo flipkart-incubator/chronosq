@@ -14,7 +14,7 @@
     <artifactId>chronosQ-reservation-impl-rmq</artifactId>
     <dependencies>
         <dependency>
-            <groupId>chronosQ</groupId>
+            <groupId>com.flipkart.chronosq</groupId>
             <artifactId>chronosQ-core</artifactId>
             <version>${revision}</version>
         </dependency>
