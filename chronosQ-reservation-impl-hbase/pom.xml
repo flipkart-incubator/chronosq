@@ -1,12 +1,13 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>chronosQ</artifactId>
-        <groupId>chronosQ</groupId>
-        <version>2.0.2</version>
+        <groupId>com.flipkart.chronosq</groupId>
+        <artifactId>chronosq</artifactId>
+        <version>${revision}</version>
+        <relativePath>..</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>chronosQ-reservation-impl-hbase</artifactId>
-    <version>${package.version}</version>
+    <artifactId>chronosq-reservation-impl-hbase</artifactId>
+    <version>${revision}</version>
 
     <properties>
         <hadoop.version>2.8.5</hadoop.version>
@@ -14,9 +15,9 @@
 
     <dependencies>
         <dependency>
-            <groupId>chronosQ</groupId>
-            <artifactId>chronosQ-core</artifactId>
-            <version>${package.version}</version>
+            <groupId>com.flipkart.chronosq</groupId>
+            <artifactId>chronosq-core</artifactId>
+            <version>${revision}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.hbase</groupId>

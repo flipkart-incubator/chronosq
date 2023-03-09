@@ -6,12 +6,13 @@
     <artifactId>ha-worker</artifactId>
 
     <parent>
-        <artifactId>chronosQ</artifactId>
-        <groupId>chronosQ</groupId>
-        <version>2.0.2</version>
+        <groupId>com.flipkart.chronosq</groupId>
+        <artifactId>chronosq</artifactId>
+        <version>${revision}</version>
+        <relativePath>..</relativePath>
     </parent>
     
-    <version>${package.version}</version>
+    <version>${revision}</version>
     <modelVersion>4.0.0</modelVersion>
 
     <dependencies>

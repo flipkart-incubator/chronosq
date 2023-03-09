@@ -18,9 +18,11 @@ import java.util.*;
 public class HbaseSchedulerStore implements SchedulerStore {
 
     static Logger log = LoggerFactory.getLogger(HbaseSchedulerStore.class.getSimpleName());
-    static private final String START_STRING = "0";
-    static private final String END_STRING = "~";
-    static private final String DELIMITER = "__";
+    private static final char FIRST_CHARACTER = 0;
+    private static final char LAST_CHARACTER = 255;
+    private static final String START_STRING = Character.toString(FIRST_CHARACTER);
+    private static final String END_STRING = Character.toString(LAST_CHARACTER);
+    private static final String DELIMITER = "__";
     private final Connection hConnection;
     private final String tableName;
     private final byte[] columnFamily;
