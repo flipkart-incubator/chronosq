@@ -8,7 +8,6 @@ on:
     branches: 
       - master
       - 1.*
-      - clo
     tags:
       - v*
   pull_request:
@@ -47,7 +46,7 @@ jobs:
         server-password: CLOJARS_DEPLOY_TOKEN # env variable for token in deploy
 
     - name: Publish to clojars
-      if: ${{ startsWith(github.ref, 'refs/tags/v') || startsWith(github.ref, 'refs/heads/master') || startsWith(github.ref, 'refs/heads/clo') }}
+      if: ${{ startsWith(github.ref, 'refs/tags/v') || startsWith(github.ref, 'refs/heads/master') }}
       run: mvn deploy
       env:
         CLOJARS_USERNAME: ${{ secrets.CLOJARS_USERNAME }}
