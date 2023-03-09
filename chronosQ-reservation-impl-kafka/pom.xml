@@ -6,12 +6,12 @@
         <relativePath>..</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>chronosQ-reservation-impl-kafka</artifactId>
+    <artifactId>chronosq-reservation-impl-kafka</artifactId>
     <version>${revision}</version>
     <dependencies>
         <dependency>
             <groupId>com.flipkart.chronosq</groupId>
-            <artifactId>chronosQ-core</artifactId>
+            <artifactId>chronosq-core</artifactId>
             <version>${revision}</version>
         </dependency>
         <dependency>

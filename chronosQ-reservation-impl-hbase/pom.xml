@@ -6,7 +6,7 @@
         <relativePath>..</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>chronosQ-reservation-impl-hbase</artifactId>
+    <artifactId>chronosq-reservation-impl-hbase</artifactId>
     <version>${revision}</version>
 
     <properties>
@@ -16,7 +16,7 @@
     <dependencies>
         <dependency>
             <groupId>com.flipkart.chronosq</groupId>
-            <artifactId>chronosQ-core</artifactId>
+            <artifactId>chronosq-core</artifactId>
             <version>${revision}</version>
         </dependency>
         <dependency>

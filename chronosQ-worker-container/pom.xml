@@ -10,7 +10,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>chronosQ-worker-container</artifactId>
+    <artifactId>chronosq-worker-container</artifactId>
     <dependencies>
 
         <dependency>
@@ -21,12 +21,12 @@
 
         <dependency>
             <groupId>com.flipkart.chronosq</groupId>
-            <artifactId>chronosQ-reservation-impl-redis</artifactId>
+            <artifactId>chronosq-reservation-impl-redis</artifactId>
             <version>${revision}</version>
         </dependency>
         <dependency>
             <groupId>com.flipkart.chronosq</groupId>
-            <artifactId>chronosQ-reservation-impl-rmq</artifactId>
+            <artifactId>chronosq-reservation-impl-rmq</artifactId>
             <version>${revision}</version>
         </dependency>
 

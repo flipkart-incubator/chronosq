@@ -11,12 +11,12 @@
     <modelVersion>4.0.0</modelVersion>
     <version>${revision}</version>
 
-    <artifactId>chronosQ-reservation-impl-redis</artifactId>
+    <artifactId>chronosq-reservation-impl-redis</artifactId>
     <dependencies>
 
         <dependency>
             <groupId>com.flipkart.chronosq</groupId>
-            <artifactId>chronosQ-core</artifactId>
+            <artifactId>chronosq-core</artifactId>
             <version>${revision}</version>
         </dependency>
 

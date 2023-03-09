@@ -17,7 +17,7 @@
         <lombok.version>1.18.8</lombok.version>
     </properties>
 
-    <artifactId>chronosQ-core</artifactId>
+    <artifactId>chronosq-core</artifactId>
     <dependencies>
         <dependency>
             <groupId>com.google.guava</groupId>

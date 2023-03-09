@@ -6,6 +6,7 @@ pom.xml.next
 release.properties
 dependency-reduced-pom.xml
 buildNumber.propertie
+.flattened-pom.xml
 .idea/
 .ph
 out/
