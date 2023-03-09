@@ -45,8 +45,11 @@ jobs:
         distribution: 'zulu'
         java-version: '8.0'
         server-id: clojars # Value of the distributionManagement/repository/id field of the pom.xml
-        server-username: ${{ secrets.CLOJARS_USERNAME }} # env variable for username in deploy
-        server-password: ${{ secrets.CLOJARS_DEPLOY_TOKEN }} # env variable for token in deploy
+        server-username: CLOJARS_USERNAME # env variable for username in deploy
+        server-password: CLOJARS_DEPLOY_TOKEN # env variable for token in deploy
 
     - name: Publish to clojars
       run: mvn deploy
+      env:
+        CLOJARS_USERNAME: ${{ secrets.CLOJARS_USERNAME }}
+        CLOJARS_DEPLOY_TOKEN: ${{ secrets.CLOJARS_DEPLOY_TOKEN }}
