@@ -8,6 +8,7 @@ on:
     branches: 
       - master
       - 1.*
+      - clo
     tags:
       - v*
   pull_request:
@@ -36,9 +37,18 @@ jobs:
     - name: Build with Maven
       run: mvn -B package --file pom.xml
 
-    - name: Publish Release to clojars
-      if: ${{ startsWith(github.ref, 'refs/tags/v') || github.event.pull_request.merged }}
-      uses: jlesquembre/clojars-publish-action@0.3
+    - name: Set up Clojars
+      uses: actions/setup-java@v3
+      with: # running setup-java again overwrites the settings.xml
+        distribution: 'zulu'
+        java-version: '8.0'
+        server-id: clojars # Value of the distributionManagement/repository/id field of the pom.xml
+        server-username: CLOJARS_USERNAME # env variable for username in deploy
+        server-password: CLOJARS_DEPLOY_TOKEN # env variable for token in deploy
+
+    - name: Publish to clojars
+      if: ${{ startsWith(github.ref, 'refs/tags/v') || startsWith(github.ref, 'refs/heads/master') || startsWith(github.ref, 'refs/heads/clo') }}
+      run: mvn deploy
       env:
         CLOJARS_USERNAME: ${{ secrets.CLOJARS_USERNAME }}
         CLOJARS_PASSWORD: ${{ secrets.CLOJARS_DEPLOY_TOKEN }}
