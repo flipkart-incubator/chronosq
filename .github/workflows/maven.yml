@@ -29,6 +29,7 @@ jobs:
         distribution : 'zulu'
         java-version: 8.0
         cache: 'maven'
+
     - name: Start Redis
       uses: supercharge/redis-github-action@1.1.0
       with:
@@ -38,9 +39,14 @@ jobs:
     - name: Build with Maven
       run: mvn -B package --file pom.xml
 
-    - name: Publish Release to clojars
-      uses: jlesquembre/clojars-publish-action@0.3
-      env:
-        CLOJARS_USERNAME: ${{ secrets.CLOJARS_USERNAME }}
-        CLOJARS_PASSWORD: ${{ secrets.CLOJARS_DEPLOY_TOKEN }}
-        USE_GIT_REF : false
+    - name: Set up Clojars
+      uses: actions/setup-java@v3
+      with: # running setup-java again overwrites the settings.xml
+        distribution: 'zulu'
+        java-version: '8.0'
+        server-id: clojars # Value of the distributionManagement/repository/id field of the pom.xml
+        server-username: ${{ secrets.CLOJARS_USERNAME }} # env variable for username in deploy
+        server-password: ${{ secrets.CLOJARS_DEPLOY_TOKEN }} # env variable for token in deploy
+
+    - name: Publish to clojars
+      run: mvn deploy
