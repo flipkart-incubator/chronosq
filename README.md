@@ -1,11 +1,15 @@
 ChronosQ
 -----------
 
+
+[![Build](https://github.com/flipkart-incubator/chronosq/actions/workflows/maven.yml/badge.svg)](https://github.com/flipkart-incubator/chronosq/actions/workflows/maven.yml)  [![Clojars Project](https://img.shields.io/clojars/v/com.flipkart.chronosq/chronosq.svg)](https://clojars.org/com.flipkart.chronosq/chronosq)
+
+
 chronosQ is a scheduler which runs client specific tasks on particular object when the object expires at a particular given time when being injected.
 chronosQ comprises of two modules
 
         chronosQ-client    - Part of clientApp to send data to library.
-        chronosQ-ha-worker - Individual module runs separately which reaps out data from datastore and put in queue                               available for consumer
+        chronosQ-ha-worker - Individual module runs separately which reaps out data from datastore and put in queue available for consumer
 
 #### Architecture
 ![https://docs.google.com/presentation/d/1ykneLhJIf6r1cydbYVGV2dwtZjSNCW5lz7EbKHJDdBM/edit#slide=id.plink](https://i.imgur.com/upN61tn.jpg "Architecture")
